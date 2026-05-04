@@ -11,7 +11,7 @@ class AdminSeeder extends Seeder
     public function run(): void
     {
         $admin = User::query()
-            ->where('email', 'admin@nastarte.ru')
+            ->where('email', 'daswordplay@gmail.com')
             ->orWhere('username', 'admin')
             ->first();
 
@@ -22,7 +22,7 @@ class AdminSeeder extends Seeder
             'username' => 'admin',
             'city' => 'Москва',
             'bio' => 'Администратор платформы НаСтарте.',
-            'password' => Hash::make('Admin12345'),
+            'password' => Hash::make('558790567'),
             'is_admin' => true,
             'is_banned' => false,
             'email_verified_at' => now(),
