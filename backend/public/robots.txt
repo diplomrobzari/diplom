@@ -1,0 +1,31 @@
+# robots.txt для платформы "НаСтарте"
+# Оптимизировано для SEO
+
+# Разрешаем всем поисковым роботам
+User-agent: *
+Allow: /
+
+# Запрещаем индексацию служебных страниц
+Disallow: /login
+Disallow: /register
+Disallow: /profile
+Disallow: /admin
+Disallow: /users/
+Disallow: /*/edit
+
+# Запрещаем индексацию параметров сортировки и фильтрации
+Disallow: /*?sort=
+Disallow: /*?page=
+Disallow: /*?search=
+Disallow: /*?city=
+Disallow: /*?status=
+Disallow: /*?category=
+Disallow: /*?tag=
+Disallow: /*?date_from=
+Disallow: /*?date_to=
+
+# Sitemap
+Sitemap: https://nastarte.ru/sitemap.xml
+
+# Хост (для Яндекс)
+Host: https://nastarte.ru
