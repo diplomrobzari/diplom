@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { apiFetch, getToken } from "../../../lib/api";
+import { prepareImageForUpload } from "../../../lib/imageUpload";
 import { AdminProfileCustomizationItem } from "../../../types";
 
 const ITEMS_PER_PAGE = 10;
@@ -79,10 +80,14 @@ export default function AdminCustomizationsPage() {
     if (!newName.trim() || !newFile) return;
     setProcessing(true);
     try {
+      const preparedFile = await prepareImageForUpload(newFile, {
+        maxWidth: newType === "background" ? 1920 : 1024,
+        maxHeight: newType === "background" ? 1080 : 1024,
+      });
       const form = new FormData();
       form.append("type", newType);
       form.append("name", newName.trim());
-      form.append("file", newFile);
+      form.append("file", preparedFile);
       await apiFetch("/admin/customizations", { method: "POST", token, body: form });
       setNewName("");
       setNewFile(null);
@@ -106,7 +111,14 @@ export default function AdminCustomizationsPage() {
     try {
       const form = new FormData();
       form.append("name", editingName.trim());
-      if (editingFile) form.append("file", editingFile);
+      if (editingFile) {
+        const currentItem = items.find((item) => item.id === id);
+        const preparedFile = await prepareImageForUpload(editingFile, {
+          maxWidth: currentItem?.type === "background" ? 1920 : 1024,
+          maxHeight: currentItem?.type === "background" ? 1080 : 1024,
+        });
+        form.append("file", preparedFile);
+      }
       form.append("_method", "PUT");
       await apiFetch(`/admin/customizations/${id}`, { method: "POST", token, body: form });
       setEditingId(null);

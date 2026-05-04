@@ -78,6 +78,8 @@ export async function apiFetch<T>(
         message = first || body.message || message;
       } else if (res.status === 429) {
         message = "Слишком много попыток. Подождите минуту и попробуйте снова.";
+      } else if (res.status === 413) {
+        message = "Файл слишком большой. Уменьшите изображение и попробуйте снова.";
       } else {
         message = localizeApiMessage(body.message || message, res.status);
       }
@@ -89,6 +91,8 @@ export async function apiFetch<T>(
     } catch {
       if (res.status === 429) {
         message = "Слишком много попыток. Подождите минуту и попробуйте снова.";
+      } else if (res.status === 413) {
+        message = "Файл слишком большой. Уменьшите изображение и попробуйте снова.";
       } else {
         message = localizeApiMessage(text || message, res.status);
       }
