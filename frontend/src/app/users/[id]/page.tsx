@@ -262,12 +262,12 @@ export default function UserProfilePage() {
   return (
     <div className="relative isolate min-h-screen overflow-x-hidden bg-[#F5F5F5]">
       {selectedBackgroundAsset && (
-        <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+        <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[17rem] overflow-hidden md:fixed md:inset-0 md:h-auto">
           <img
             src={selectedBackgroundAsset}
             alt=""
             aria-hidden="true"
-            className="absolute inset-0 h-full w-full object-contain object-top"
+            className="absolute inset-0 h-full w-full object-cover object-center md:object-contain md:object-top"
           />
           <div className="absolute inset-0 bg-[#12072b]/45" />
         </div>
