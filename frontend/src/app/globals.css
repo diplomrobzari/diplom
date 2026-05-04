@@ -1,0 +1,269 @@
+@import "../../node_modules/tailwindcss/index.css";
+
+:root {
+  /* Основные цвета из дизайна */
+  --color-primary: #7D39EB; /* Фиолетовый */
+  --color-neon: #C6FF33; /* Лаймовый */
+  --color-black: #000000;
+  --color-dark: #111111;
+  --color-white: #FFFFFF;
+  --color-gray-light: #F5F5F5;
+  --color-gray: #888888;
+
+  /* Градиенты */
+  --gradient-primary: linear-gradient(135deg, #7D39EB 0%, #9D65E8 100%);
+  --gradient-neon: linear-gradient(135deg, #C6FF33 0%, #A8E829 100%);
+}
+
+@theme inline {
+  --color-background: var(--color-white);
+  --color-foreground: var(--color-dark);
+  --color-primary: var(--color-primary);
+  --color-neon: var(--color-neon);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* Оптимизация производительности */
+* {
+  box-sizing: border-box;
+}
+
+/* Предотвращение layout shift при загрузке */
+img, svg, video, canvas {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Оптимизация рендеринга для анимаций */
+.animate-spin,
+.animate-pulse,
+.transition-all,
+.transform {
+  will-change: transform, opacity;
+}
+
+/* Удаление после использования */
+.will-change-auto {
+  will-change: auto;
+}
+
+/* Оптимизация для мобильных устройств */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+body {
+  background: var(--color-white);
+  color: var(--color-dark);
+  font-family: Arial, Helvetica, sans-serif;
+  /* Оптимизация рендеринга шрифтов */
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Утилиты для неоновых акцентов */
+.neon-text {
+  color: var(--color-neon);
+  text-shadow: 0 0 10px rgba(198, 255, 51, 0.3);
+}
+
+.neon-border {
+  border: 2px solid var(--color-neon);
+  box-shadow: 0 0 10px rgba(198, 255, 51, 0.2);
+}
+
+.neon-bg {
+  background: var(--color-neon);
+  box-shadow: 0 0 20px rgba(198, 255, 51, 0.3);
+}
+
+/* Кнопки в стиле дизайна - 2 основных варианта */
+.btn-primary {
+  background: var(--color-neon);
+  color: var(--color-black);
+  padding: 14px 40px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(198, 255, 51, 0.4);
+  background: #b3e62e;
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Второстепенная кнопка (отмена, назад) */
+.btn-secondary {
+  background: var(--color-gray-light);
+  color: var(--color-dark);
+  padding: 14px 40px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--color-gray);
+  color: var(--color-white);
+}
+
+.btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Опасная кнопка (удаление) */
+.btn-danger {
+  background: #dc2626;
+  color: var(--color-white);
+  padding: 14px 40px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-danger:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(220, 38, 38, 0.4);
+  background: #b91c1c;
+}
+
+.btn-danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Маленькая опасная кнопка (для списков) */
+.btn-danger-sm {
+  background: transparent;
+  color: #dc2626;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  border: 2px solid #dc2626;
+  cursor: pointer;
+}
+
+.btn-danger-sm:hover:not(:disabled) {
+  background: #dc2626;
+  color: var(--color-white);
+}
+
+.btn-danger-sm:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Карточки в стиле дизайна */
+.card-dark {
+  background: var(--color-dark);
+  border-radius: 20px;
+  overflow: hidden;
+  transition: transform 0.3s ease;
+}
+
+.card-dark:hover {
+  transform: translateY(-5px);
+}
+
+.card-neon {
+  background: var(--color-primary);
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid rgba(198, 255, 51, 0.2);
+}
+
+/* Типография */
+.heading-xl {
+  font-size: clamp(3rem, 8vw, 8rem);
+  font-weight: 900;
+  line-height: 0.9;
+  letter-spacing: -0.02em;
+}
+
+.heading-lg {
+  font-size: clamp(2rem, 5vw, 4rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+
+.heading-md {
+  font-size: clamp(1.5rem, 3vw, 2.5rem);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+/* Анимации */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Скроллбар */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-gray-light);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-neon);
+}

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+        http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+    <!--
+    Sitemap для платформы "НаСтарте"
+    Обновлено: 15 апреля 2026 г.
+    -->
+
+    <!-- Главная страница -->
+    <url>
+        <loc>https://nastarte.ru/</loc>
+        <lastmod>2026-04-15</lastmod>
+        <changefreq>daily</changefreq>
+        <priority>1.0</priority>
+    </url>
+
+    <!-- Страница всех объявлений -->
+    <url>
+        <loc>https://nastarte.ru/competitions</loc>
+        <lastmod>2026-04-15</lastmod>
+        <changefreq>daily</changefreq>
+        <priority>0.9</priority>
+    </url>
+
+    <!-- Страница входа -->
+    <url>
+        <loc>https://nastarte.ru/login</loc>
+        <lastmod>2026-04-15</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.5</priority>
+    </url>
+
+    <!-- Страница регистрации -->
+    <url>
+        <loc>https://nastarte.ru/register</loc>
+        <lastmod>2026-04-15</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.6</priority>
+    </url>
+
+    <!--
+    Примечание:
+    - Страницы отдельных соревнований (/competitions/{id}) индексируются через динамическую генерацию
+    - Для полной индексации рекомендуется настроить динамическую генерацию sitemap через backend (Laravel)
+    - Административные страницы (/admin), профили (/profile) и API (/api) исключены через robots.txt
+    - Страницы с параметрами фильтров (?city=...&status=...) исключены через robots.txt (Disallow: /*?*)
+    -->
+</urlset>

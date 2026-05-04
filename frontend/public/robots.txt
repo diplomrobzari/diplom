@@ -1,0 +1,21 @@
+# robots.txt для НаСтарте.ru
+# https://nastarte.ru
+
+User-agent: *
+Allow: /
+Allow: /competitions
+Allow: /competitions/*
+Allow: /login
+Allow: /register
+
+# Закрытые разделы
+Disallow: /admin
+Disallow: /profile
+Disallow: /api
+Disallow: /_next
+Disallow: /*?*
+Disallow: /competitions/new
+Disallow: /competitions/*/edit
+
+# Sitemap
+Sitemap: https://nastarte.ru/sitemap.xml
