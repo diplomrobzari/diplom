@@ -555,8 +555,8 @@ export default function ProfilePage() {
         <div className="grid lg:grid-cols-3 gap-8">
           <div className="lg:col-span-1">
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 sticky top-24">
-              <div className="flex items-start gap-4 mb-6">
-                <div className="relative h-24 w-24 shrink-0">
+              <div className="mb-6 flex flex-col gap-4 min-[380px]:flex-row min-[380px]:items-start">
+                <div className="relative h-24 w-24 shrink-0 self-center min-[380px]:self-start">
                   <div className="absolute inset-[8px] z-10 rounded-full overflow-hidden border-2 border-[#7D39EB]/20 bg-[#7D39EB]">
                     {profile.avatar_url ? (
                       <img
@@ -586,15 +586,15 @@ export default function ProfilePage() {
                     </label>
                   )}
                 </div>
-                <div className="flex-1">
-                  <h2 className="text-lg font-bold text-[#7D39EB] leading-tight mb-2">{fullName}</h2>
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-lg font-bold text-[#7D39EB] leading-tight mb-2 break-words">{fullName}</h2>
                   <p className="text-xs text-gray-500 mb-3">@{profile.username}</p>
                   {!isEditing ? (
                     <button onClick={() => setIsEditing(true)} className="btn-primary px-4 py-2 text-sm">Редактировать</button>
                   ) : (
-                    <div className="flex gap-2">
-                      <button onClick={() => setIsEditing(false)} className="btn-secondary px-4 py-2 text-sm" disabled={saving}>Отмена</button>
-                      <button onClick={handleSave} className="btn-primary px-4 py-2 text-sm" disabled={saving}>{saving ? "..." : "OK"}</button>
+                    <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+                      <button onClick={() => setIsEditing(false)} className="btn-secondary min-w-0 px-4 py-2 text-sm" disabled={saving}>Отмена</button>
+                      <button onClick={handleSave} className="btn-primary min-w-0 px-4 py-2 text-sm" disabled={saving}>{saving ? "..." : "OK"}</button>
                     </div>
                   )}
                 </div>
