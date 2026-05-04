@@ -35,7 +35,7 @@ class AdminSeeder extends Seeder
 
         User::create([
             ...$data,
-            'email' => 'admin@nastarte.ru',
+            'email' => 'daswordplay@gmail.com',
         ]);
     }
 }
