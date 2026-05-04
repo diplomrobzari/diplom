@@ -14,11 +14,11 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         \App\Models\User::updateOrCreate(
-            ['email' => 'admin@nastarte.ru'],
+            ['email' => 'daswordplay@gmail.com'],
             [
                 'name' => 'Admin',
                 'username' => 'admin',
-                'password' => Hash::make('password'),
+                'password' => Hash::make('558790567'),
                 'is_admin' => true,
                 'email_verified_at' => now(),
             ]
