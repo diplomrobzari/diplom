@@ -8,6 +8,7 @@ use App\Models\Participation;
 use App\Models\Tag;
 use App\Models\User;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -56,7 +57,7 @@ class CompetitionSeeder extends Seeder
             'technology' => 'Технологии',
             'food' => 'Еда',
         ])->mapWithKeys(fn (string $name, string $slug) => [
-            $slug => Category::firstOrCreate(['slug' => $slug], ['name' => $name]),
+            $slug => $this->findOrCreateBySlugOrName(Category::class, $slug, $name),
         ]);
 
         $tags = collect([
@@ -67,7 +68,7 @@ class CompetitionSeeder extends Seeder
             'offline' => 'очно',
             'rating' => 'рейтинговое',
         ])->mapWithKeys(fn (string $name, string $slug) => [
-            $slug => Tag::firstOrCreate(['slug' => $slug], ['name' => $name]),
+            $slug => $this->findOrCreateBySlugOrName(Tag::class, $slug, $name),
         ]);
 
         $now = CarbonImmutable::now();
@@ -138,5 +139,26 @@ class CompetitionSeeder extends Seeder
                 }
             }
         }
+    }
+
+    /**
+     * Existing demo databases may already contain the same visible name with a
+     * different slug, so we reuse either match instead of violating unique keys.
+     */
+    private function findOrCreateBySlugOrName(string $modelClass, string $slug, string $name): Model
+    {
+        $model = $modelClass::query()
+            ->where('slug', $slug)
+            ->orWhere('name', $name)
+            ->first();
+
+        if ($model) {
+            return $model;
+        }
+
+        return $modelClass::create([
+            'slug' => $slug,
+            'name' => $name,
+        ]);
     }
 }

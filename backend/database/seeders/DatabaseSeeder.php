@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 class DatabaseSeeder extends Seeder
@@ -13,16 +12,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        \App\Models\User::updateOrCreate(
-            ['email' => 'daswordplay@gmail.com'],
-            [
-                'name' => 'Admin',
-                'username' => 'admin',
-                'password' => Hash::make('558790567'),
-                'is_admin' => true,
-                'email_verified_at' => now(),
-            ]
-        );
+        $this->call(AdminSeeder::class);
 
         $categories = [
             'Бег',
