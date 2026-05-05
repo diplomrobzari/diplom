@@ -162,6 +162,10 @@ export function Header() {
     };
   }, [loadUnreadCount, loadUser]);
 
+  const closeMobileMenu = () => {
+    setMobileMenuOpen(false);
+  };
+
   const handleLogout = async () => {
     try {
       const authToken = getToken();
@@ -177,6 +181,7 @@ export function Header() {
     setToken(null);
     setUser(null);
     setUnreadCount(0);
+    closeMobileMenu();
     router.push("/");
   };
 
@@ -282,25 +287,25 @@ export function Header() {
         {mobileMenuOpen && (
           <div className="border-t border-white/20 py-4 md:hidden">
             <nav className="flex flex-col gap-4">
-              <Link href="/competitions" className="py-2 text-sm font-medium uppercase tracking-wide transition-colors hover:text-[#C6FF33]">
+              <Link href="/competitions" onClick={closeMobileMenu} className="py-2 text-sm font-medium uppercase tracking-wide transition-colors hover:text-[#C6FF33]">
                 Объявления
               </Link>
-              <Link href="/users" className="py-2 text-sm font-medium uppercase tracking-wide transition-colors hover:text-[#C6FF33]">
+              <Link href="/users" onClick={closeMobileMenu} className="py-2 text-sm font-medium uppercase tracking-wide transition-colors hover:text-[#C6FF33]">
                 Рейтинг
               </Link>
               {token && (
                 <>
-                  <Link href="/competitions/new" className="py-2 text-sm font-medium uppercase tracking-wide transition-colors hover:text-[#C6FF33]">
+                  <Link href="/competitions/new" onClick={closeMobileMenu} className="py-2 text-sm font-medium uppercase tracking-wide transition-colors hover:text-[#C6FF33]">
                     Создать объявление
                   </Link>
-                  <Link href="/notifications" className="py-2 text-sm font-medium uppercase tracking-wide transition-colors hover:text-[#C6FF33]">
+                  <Link href="/notifications" onClick={closeMobileMenu} className="py-2 text-sm font-medium uppercase tracking-wide transition-colors hover:text-[#C6FF33]">
                     Уведомления {unreadCount > 0 ? `(${unreadCount})` : ""}
                   </Link>
-                  <Link href="/profile" className="py-2 text-sm font-medium uppercase tracking-wide transition-colors hover:text-[#C6FF33]">
+                  <Link href="/profile" onClick={closeMobileMenu} className="py-2 text-sm font-medium uppercase tracking-wide transition-colors hover:text-[#C6FF33]">
                     Профиль
                   </Link>
                   {user?.is_admin && (
-                    <Link href="/admin" className="py-2 text-sm font-medium uppercase tracking-wide transition-colors hover:text-[#C6FF33]">
+                    <Link href="/admin" onClick={closeMobileMenu} className="py-2 text-sm font-medium uppercase tracking-wide transition-colors hover:text-[#C6FF33]">
                       Панель админа
                     </Link>
                   )}
@@ -315,10 +320,10 @@ export function Header() {
                 </button>
               ) : (
                 <>
-                  <Link href="/login" className="py-2 text-sm font-medium uppercase tracking-wide transition-colors hover:text-[#C6FF33]">
+                  <Link href="/login" onClick={closeMobileMenu} className="py-2 text-sm font-medium uppercase tracking-wide transition-colors hover:text-[#C6FF33]">
                     Войти
                   </Link>
-                  <Link href="/register" className="py-2 text-sm font-medium uppercase tracking-wide text-[#C6FF33]">
+                  <Link href="/register" onClick={closeMobileMenu} className="py-2 text-sm font-medium uppercase tracking-wide text-[#C6FF33]">
                     Регистрация
                   </Link>
                 </>
