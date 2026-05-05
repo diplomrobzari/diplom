@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Competition, Category, Tag } from "../../types";
 import { apiFetch } from "../../lib/api";
@@ -53,6 +53,30 @@ function getFiltersFromSearchParams(params: SearchParamsReader): Filters {
 }
 
 export default function CompetitionsListPage() {
+  return (
+    <Suspense fallback={<CompetitionsListFallback />}>
+      <CompetitionsListContent />
+    </Suspense>
+  );
+}
+
+function CompetitionsListFallback() {
+  return (
+    <div className="min-h-full bg-gray-50">
+      <section className="bg-gradient-to-br from-[#7D39EB] to-black py-20 text-white">
+        <div className="mx-auto max-w-7xl px-4">
+          <div className="h-10 w-2/3 max-w-xl animate-pulse rounded-xl bg-white/20" />
+          <div className="mt-4 h-5 w-1/2 max-w-md animate-pulse rounded-lg bg-white/10" />
+        </div>
+      </section>
+      <div className="mx-auto max-w-7xl px-4 py-8">
+        <div className="h-32 animate-pulse rounded-2xl bg-white shadow-sm" />
+      </div>
+    </div>
+  );
+}
+
+function CompetitionsListContent() {
   const searchParams = useSearchParams();
   const searchParamsString = searchParams.toString();
   const [paginated, setPaginated] = useState<PaginatedResponse | null>(null);
