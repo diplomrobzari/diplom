@@ -83,6 +83,7 @@ export default function AdminCustomizationsPage() {
       const preparedFile = await prepareImageForUpload(newFile, {
         maxWidth: newType === "background" ? 1920 : 1024,
         maxHeight: newType === "background" ? 1080 : 1024,
+        cropAspectRatio: newType === "background" ? 16 / 9 : undefined,
       });
       const form = new FormData();
       form.append("type", newType);
@@ -116,6 +117,7 @@ export default function AdminCustomizationsPage() {
         const preparedFile = await prepareImageForUpload(editingFile, {
           maxWidth: currentItem?.type === "background" ? 1920 : 1024,
           maxHeight: currentItem?.type === "background" ? 1080 : 1024,
+          cropAspectRatio: currentItem?.type === "background" ? 16 / 9 : undefined,
         });
         form.append("file", preparedFile);
       }

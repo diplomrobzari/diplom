@@ -279,7 +279,7 @@ class AdminController extends Controller
         $data = $request->validate([
             'type' => ['required', 'in:frame,background'],
             'name' => ['required', 'string', 'max:255'],
-            'file' => ['required', 'file', 'mimes:jpg,jpeg,png,gif,webp', 'max:4096'],
+            'file' => ['required', 'file', 'mimes:jpg,jpeg,png,gif,webp', 'max:10240'],
         ]);
 
         $nextRequired = ProfileCustomization::where('type', $data['type'])->max('required_tasks');
@@ -301,7 +301,7 @@ class AdminController extends Controller
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,gif,webp', 'max:4096'],
+            'file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,gif,webp', 'max:10240'],
         ]);
 
         $customization->name = $data['name'];

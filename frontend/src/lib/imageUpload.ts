@@ -1,9 +1,10 @@
-const DEFAULT_MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
+const DEFAULT_MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 
 type CompressionOptions = {
   maxWidth: number;
   maxHeight: number;
   maxBytes?: number;
+  cropAspectRatio?: number;
 };
 
 function loadImage(file: File): Promise<HTMLImageElement> {
@@ -40,7 +41,7 @@ function canvasToBlob(canvas: HTMLCanvasElement, mimeType: string, quality: numb
 
 export async function prepareImageForUpload(
   file: File,
-  { maxWidth, maxHeight, maxBytes = DEFAULT_MAX_UPLOAD_BYTES }: CompressionOptions
+  { maxWidth, maxHeight, maxBytes = DEFAULT_MAX_UPLOAD_BYTES, cropAspectRatio }: CompressionOptions
 ): Promise<File> {
   if (file.type === "image/gif") {
     if (file.size > maxBytes) {
@@ -51,9 +52,26 @@ export async function prepareImageForUpload(
   }
 
   const image = await loadImage(file);
-  const initialRatio = Math.min(1, maxWidth / image.naturalWidth, maxHeight / image.naturalHeight);
-  let width = Math.max(1, Math.round(image.naturalWidth * initialRatio));
-  let height = Math.max(1, Math.round(image.naturalHeight * initialRatio));
+  let sourceX = 0;
+  let sourceY = 0;
+  let sourceWidth = image.naturalWidth;
+  let sourceHeight = image.naturalHeight;
+
+  if (cropAspectRatio) {
+    const imageRatio = image.naturalWidth / image.naturalHeight;
+
+    if (imageRatio > cropAspectRatio) {
+      sourceWidth = Math.round(image.naturalHeight * cropAspectRatio);
+      sourceX = Math.round((image.naturalWidth - sourceWidth) / 2);
+    } else if (imageRatio < cropAspectRatio) {
+      sourceHeight = Math.round(image.naturalWidth / cropAspectRatio);
+      sourceY = Math.round((image.naturalHeight - sourceHeight) / 2);
+    }
+  }
+
+  const initialRatio = Math.min(1, maxWidth / sourceWidth, maxHeight / sourceHeight);
+  let width = Math.max(1, Math.round(sourceWidth * initialRatio));
+  let height = Math.max(1, Math.round(sourceHeight * initialRatio));
 
   const canvas = document.createElement("canvas");
   const context = canvas.getContext("2d");
@@ -70,7 +88,7 @@ export async function prepareImageForUpload(
     canvas.width = width;
     canvas.height = height;
     context.clearRect(0, 0, width, height);
-    context.drawImage(image, 0, 0, width, height);
+    context.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, width, height);
 
     for (const quality of qualities) {
       const candidate = await canvasToBlob(canvas, mimeType, quality);
