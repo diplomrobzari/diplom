@@ -896,6 +896,10 @@ export default function CompetitionPage() {
                       </button>
                     )}
                   </div>
+                ) : !currentUser ? (
+                  <p className="rounded-xl bg-[#7D39EB]/10 p-3 text-sm font-medium text-[#7D39EB]">
+                    Чтобы записаться нужно зарегистрироваться или войти в аккаунт
+                  </p>
                 ) : (
                   <button
                     onClick={handleRegister}
