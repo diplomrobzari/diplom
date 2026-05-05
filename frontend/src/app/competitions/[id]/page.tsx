@@ -35,6 +35,11 @@ export default function CompetitionPage() {
 
   const isCreator = currentUser && item ? item.creator?.id === currentUser.id : false;
   const isAdmin = currentUser?.is_admin === true;
+  const visibleTags = item?.tags?.length
+    ? item.tags
+    : (item?.tag_names ?? []).map((name) => ({ id: name, name, slug: name }));
+
+  const getTagFilterHref = (slug: string) => `/competitions?tags=${encodeURIComponent(slug)}`;
 
   const openResultsForm = () => {
     const existingResults: Record<number, ParticipantResultDraft> = {};
@@ -392,12 +397,17 @@ export default function CompetitionPage() {
                 </div>
               )}
 
-              {(item.tag_names?.length || item.tags?.length) > 0 && (
+              {visibleTags.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-4">
-                  {(item.tag_names?.length ? item.tag_names : item.tags?.map((t) => t.name))?.map((tagName, idx) => (
-                    <span key={idx} className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">
-                      #{tagName}
-                    </span>
+                  {visibleTags.map((tag) => (
+                    <Link
+                      key={tag.id}
+                      href={getTagFilterHref(tag.slug)}
+                      className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm transition-colors hover:bg-[#7D39EB] hover:text-white"
+                      title={`Показать объявления с тегом: ${tag.name}`}
+                    >
+                      #{tag.name}
+                    </Link>
                   ))}
                 </div>
               )}

@@ -17,6 +17,7 @@ export function CompetitionCard({ item, activeTagSlugs = [] }: Props) {
   const visibleTags = item.tags?.length
     ? [...matchedTags, ...otherTags].slice(0, Math.max(3, matchedTags.length))
     : (item.tag_names ?? []).slice(0, 3).map((name) => ({ id: name, name, slug: name }));
+  const getTagFilterHref = (slug: string) => `/competitions?tags=${encodeURIComponent(slug)}`;
 
   return (
     <div className="group flex flex-col rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
@@ -103,17 +104,18 @@ export function CompetitionCard({ item, activeTagSlugs = [] }: Props) {
           </span>
         )}
         {visibleTags.map((tag) => (
-          <span
+          <Link
             key={tag.id}
+            href={getTagFilterHref(tag.slug)}
             className={`rounded-lg px-3 py-1 text-xs ${
               activeTagSlugs.includes(tag.slug)
                 ? "bg-[#C6FF33]/30 font-semibold text-[#5A29A8]"
-                : "bg-gray-100 text-gray-600"
+                : "bg-gray-100 text-gray-600 hover:bg-[#7D39EB] hover:text-white"
             }`}
             title={`Тег: ${tag.name}`}
           >
             #{tag.name}
-          </span>
+          </Link>
         ))}
       </div>
 

@@ -28,13 +28,37 @@ type PaginatedResponse = {
 
 const PER_PAGE = 15;
 
+function getInitialFilters(): Filters {
+  if (typeof window === "undefined") {
+    return { sort: "newest" };
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const rawTags = params.get("tags") ?? params.get("tag");
+  const parsedTags = rawTags
+    ?.split(",")
+    .map((tag) => tag.trim())
+    .filter(Boolean);
+
+  return {
+    search: params.get("search") || undefined,
+    city: params.get("city") || undefined,
+    status: params.get("status") || undefined,
+    date_from: params.get("date_from") || undefined,
+    date_to: params.get("date_to") || undefined,
+    category: params.get("category") || undefined,
+    tags: parsedTags && parsedTags.length > 0 ? parsedTags : undefined,
+    sort: params.get("sort") || "newest",
+  };
+}
+
 export default function CompetitionsListPage() {
   const [paginated, setPaginated] = useState<PaginatedResponse | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
-  const [filters, setFilters] = useState<Filters>({ sort: "newest" });
+  const [filters, setFilters] = useState<Filters>(() => getInitialFilters());
   const [filtersOpen, setFiltersOpen] = useState(true);
-  const [tagsOpen, setTagsOpen] = useState(false);
+  const [tagsOpen, setTagsOpen] = useState(() => (getInitialFilters().tags?.length ?? 0) > 0);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
