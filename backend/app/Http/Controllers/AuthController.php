@@ -6,8 +6,10 @@ use App\Mail\AccountLocked;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class AuthController extends Controller
 {
@@ -86,7 +88,15 @@ class AuthController extends Controller
                     $user->lockAccount(self::LOCK_DURATION_MINUTES);
                     
                     // Отправляем уведомление о блокировке
-                    Mail::to($user->email)->send(new AccountLocked($user, self::LOCK_DURATION_MINUTES));
+                    try {
+                        Mail::to($user->email)->send(new AccountLocked($user, self::LOCK_DURATION_MINUTES));
+                    } catch (Throwable $exception) {
+                        Log::error('Failed to send account lock notification.', [
+                            'user_id' => $user->id,
+                            'email' => $user->email,
+                            'error' => $exception->getMessage(),
+                        ]);
+                    }
                     
                     throw ValidationException::withMessages([
                         'login' => ['Аккаунт заблокирован на ' . self::LOCK_DURATION_MINUTES . ' мин. На ваш email отправлено уведомление.'],
@@ -118,13 +128,29 @@ class AuthController extends Controller
                 $user->two_factor_code = Hash::make($newCode);
                 $user->two_factor_code_sent_at = now();
                 $user->save();
+                try {
                 
                 // Отправляем код на email
                 \Mail::raw("Ваш код для входа: {$newCode}\n\nКод действителен в течение 10 минут.", function ($message) use ($user) {
                     $message->to($user->email)
                         ->subject('Код двухфакторной аутентификации');
                 });
-                
+                } catch (Throwable $exception) {
+                    Log::error('Failed to send two-factor login code.', [
+                        'user_id' => $user->id,
+                        'email' => $user->email,
+                        'error' => $exception->getMessage(),
+                    ]);
+
+                    $user->two_factor_code = null;
+                    $user->two_factor_code_sent_at = null;
+                    $user->save();
+
+                    throw ValidationException::withMessages([
+                        'login' => ['Не удалось отправить код двухфакторной аутентификации. Проверьте настройки почты на сервере.'],
+                    ]);
+                }
+
                 return response()->json([
                     'two_factor_required' => true,
                     'message' => 'Код отправлен на вашу электронную почту.',
