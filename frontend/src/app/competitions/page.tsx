@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Competition, Category, Tag } from "../../types";
 import { apiFetch } from "../../lib/api";
 import { CompetitionCard } from "../../components/CompetitionCard";
@@ -28,12 +29,11 @@ type PaginatedResponse = {
 
 const PER_PAGE = 15;
 
-function getInitialFilters(): Filters {
-  if (typeof window === "undefined") {
-    return { sort: "newest" };
-  }
+type SearchParamsReader = {
+  get(name: string): string | null;
+};
 
-  const params = new URLSearchParams(window.location.search);
+function getFiltersFromSearchParams(params: SearchParamsReader): Filters {
   const rawTags = params.get("tags") ?? params.get("tag");
   const parsedTags = rawTags
     ?.split(",")
@@ -53,12 +53,14 @@ function getInitialFilters(): Filters {
 }
 
 export default function CompetitionsListPage() {
+  const searchParams = useSearchParams();
+  const searchParamsString = searchParams.toString();
   const [paginated, setPaginated] = useState<PaginatedResponse | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
-  const [filters, setFilters] = useState<Filters>(() => getInitialFilters());
+  const [filters, setFilters] = useState<Filters>({ sort: "newest" });
   const [filtersOpen, setFiltersOpen] = useState(true);
-  const [tagsOpen, setTagsOpen] = useState(() => (getInitialFilters().tags?.length ?? 0) > 0);
+  const [tagsOpen, setTagsOpen] = useState(false);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -96,6 +98,22 @@ export default function CompetitionsListPage() {
     apiFetch<Category[]>("/categories").then(setCategories);
     apiFetch<Tag[]>("/tags").then(setTags);
   }, []);
+
+  useEffect(() => {
+    const nextFilters = getFiltersFromSearchParams(searchParams);
+
+    setFilters((prev) => {
+      if (JSON.stringify(prev) === JSON.stringify(nextFilters)) {
+        return prev;
+      }
+
+      return nextFilters;
+    });
+
+    if ((nextFilters.tags?.length ?? 0) > 0) {
+      setTagsOpen(true);
+    }
+  }, [searchParams, searchParamsString]);
 
   useEffect(() => {
     const filtersChanged =
