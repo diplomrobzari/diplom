@@ -139,16 +139,18 @@ export default function NewCompetitionPage() {
 
   const resolveCityNameByCoords = async (ymaps: any, lat: number, lng: number, fallback = "") => {
     const attempts = [
-      { results: 1, kind: "locality" },
-      { results: 1 },
+      { request: [lat, lng], options: { results: 1, kind: "locality" } },
+      { request: [lat, lng], options: { results: 1 } },
+      { request: `${lng},${lat}`, options: { results: 1, kind: "locality" } },
+      { request: `${lng},${lat}`, options: { results: 1 } },
     ];
 
     if (typeof ymaps?.geocode === "function") {
-      for (const options of attempts) {
+      for (const { request, options } of attempts) {
         try {
-          const geoResult = await ymaps.geocode([lat, lng], options);
+          const geoResult = await ymaps.geocode(request, options);
           const geoObject = getFirstGeoObject(geoResult);
-          const city = extractCityName(geoObject, "");
+          const city = extractCityName(geoObject, fallback);
 
           if (city.trim()) {
             return city.trim();
@@ -157,21 +159,6 @@ export default function NewCompetitionPage() {
           // Try the next geocoding strategy.
         }
       }
-    }
-
-    try {
-      const params = new URLSearchParams({
-        lat: String(lat),
-        lng: String(lng),
-      });
-      const response = await apiFetch<{ city?: string | null }>(`/geocode?${params.toString()}`);
-      const city = response.city?.trim();
-
-      if (city) {
-        return city;
-      }
-    } catch {
-      // Backend reverse geocoding is only a backup for the browser API.
     }
 
     return fallback.trim();
