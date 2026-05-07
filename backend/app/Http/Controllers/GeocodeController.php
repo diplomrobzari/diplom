@@ -39,6 +39,10 @@ class GeocodeController extends Controller
         }
 
         $members = $this->requestYandex($apiKey, $query);
+        if ($members === null) {
+            return $this->yandexUnavailableResponse();
+        }
+
         if (empty($members)) {
             return response()->json([
                 'results' => [],
@@ -80,9 +84,16 @@ class GeocodeController extends Controller
             ], 503);
         }
 
-        $members = $this->requestYandex($apiKey, "{$lng},{$lat}", 'locality', 1);
+        $members = $this->requestYandex($apiKey, "{$lng},{$lat}", 'locality', 1, 'longlat');
+        if ($members === null) {
+            return $this->yandexUnavailableResponse();
+        }
+
         if (empty($members)) {
-            $members = $this->requestYandex($apiKey, "{$lng},{$lat}", null, 1);
+            $members = $this->requestYandex($apiKey, "{$lng},{$lat}", null, 1, 'longlat');
+            if ($members === null) {
+                return $this->yandexUnavailableResponse();
+            }
         }
 
         if (empty($members)) {
@@ -105,12 +116,13 @@ class GeocodeController extends Controller
         ]);
     }
 
-    private function requestYandex(string $apiKey, string $geocode, ?string $kind = null, int $results = 5): array
+    private function requestYandex(string $apiKey, string $geocode, ?string $kind = null, int $results = 5, ?string $sco = null): ?array
     {
         $params = [
             'apikey' => $apiKey,
             'geocode' => $geocode,
             'format' => 'json',
+            'lang' => 'ru_RU',
             'results' => $results,
         ];
 
@@ -118,15 +130,30 @@ class GeocodeController extends Controller
             $params['kind'] = $kind;
         }
 
+        if ($sco) {
+            $params['sco'] = $sco;
+        }
+
         $response = Http::timeout(5)->get('https://geocode-maps.yandex.ru/1.x/', $params);
 
         if (!$response->successful()) {
-            return [];
+            return null;
         }
 
         $data = $response->json();
 
+        if (isset($data['error']) || isset($data['message'])) {
+            return null;
+        }
+
         return $data['response']['GeoObjectCollection']['featureMember'] ?? [];
+    }
+
+    private function yandexUnavailableResponse()
+    {
+        return response()->json([
+            'error' => 'Яндекс Геокодер не вернул данные. Проверьте, что ключ в YANDEX_GEOCODER_API_KEY активен для HTTP Геокодера и разрешен для этого сервера.',
+        ], 502);
     }
 
     private function extractLocality(array $meta, array $geo): ?string

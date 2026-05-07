@@ -77,26 +77,40 @@ export default function NewCompetitionPage() {
   const [citySearchLoading, setCitySearchLoading] = useState(false);
   const citySearchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  const normalizeCityName = (value: unknown) =>
+    typeof value === "string" ? value.trim() : "";
+
+  const firstCityCandidate = (...values: unknown[]) => {
+    for (const value of values) {
+      const normalized = normalizeCityName(value);
+      if (normalized) return normalized;
+    }
+
+    return "";
+  };
+
   const extractCityName = (geoObject: any, fallback = "") => {
     if (!geoObject) return fallback;
 
     const localities = geoObject.getLocalities?.();
-    if (Array.isArray(localities) && localities[0]) {
-      return localities[0];
+    const localityFromGetter = Array.isArray(localities) ? firstCityCandidate(...localities) : "";
+    if (localityFromGetter) {
+      return localityFromGetter;
     }
 
     const administrativeAreas = geoObject.getAdministrativeAreas?.();
     const directName = geoObject.properties?.get?.("name");
     const text = geoObject.properties?.get?.("text");
     const description = geoObject.properties?.get?.("description");
+    const addressLine = geoObject.getAddressLine?.();
     const metaData = geoObject.properties?.get?.("metaDataProperty");
     const geocoderMetaData = metaData?.GeocoderMetaData;
     const components = geocoderMetaData?.Address?.Components || [];
     const addressDetails = geocoderMetaData?.AddressDetails?.Country;
 
-    const localityComponent = components.find((component: any) => component?.kind === "locality");
-    const provinceComponent = components.find((component: any) => component?.kind === "province");
-    const areaComponent = components.find((component: any) => component?.kind === "area");
+    const componentName = (kind: string) =>
+      components.find((component: any) => component?.kind === kind)?.name;
+
     const localityFromDetails =
       addressDetails?.AdministrativeArea?.Locality?.LocalityName ||
       addressDetails?.AdministrativeArea?.SubAdministrativeArea?.Locality?.LocalityName ||
@@ -104,15 +118,16 @@ export default function NewCompetitionPage() {
       addressDetails?.AdministrativeArea?.DependentLocality?.DependentLocalityName ||
       "";
 
-    return (
-      localityComponent?.name ||
+    return firstCityCandidate(
+      componentName("locality"),
       localityFromDetails ||
-      provinceComponent?.name ||
-      areaComponent?.name ||
+      componentName("province"),
+      componentName("area"),
       administrativeAreas?.[0] ||
-      directName ||
+      directName,
       description ||
-      text ||
+      text,
+      addressLine,
       fallback
     );
   };
@@ -128,17 +143,19 @@ export default function NewCompetitionPage() {
       { results: 1 },
     ];
 
-    for (const options of attempts) {
-      try {
-        const geoResult = await ymaps.geocode([lat, lng], options);
-        const geoObject = getFirstGeoObject(geoResult);
-        const city = extractCityName(geoObject, "");
+    if (typeof ymaps?.geocode === "function") {
+      for (const options of attempts) {
+        try {
+          const geoResult = await ymaps.geocode([lat, lng], options);
+          const geoObject = getFirstGeoObject(geoResult);
+          const city = extractCityName(geoObject, "");
 
-        if (city.trim()) {
-          return city.trim();
+          if (city.trim()) {
+            return city.trim();
+          }
+        } catch {
+          // Try the next geocoding strategy.
         }
-      } catch {
-        // Try the next geocoding strategy.
       }
     }
 
@@ -161,15 +178,19 @@ export default function NewCompetitionPage() {
   };
 
   const applyMapPoint = (lat: number, lng: number, city = "") => {
+    const normalizedCity = normalizeCityName(city);
+
     setForm((p) => ({
       ...p,
-      city: city || p.city,
+      city: normalizedCity || p.city,
       latitude: lat.toString(),
       longitude: lng.toString(),
     }));
 
-    if (city) {
+    if (normalizedCity) {
       setFieldErrors((prev) => ({ ...prev, city: "" }));
+      setShowSuggestions(false);
+      setCitySuggestions([]);
     }
   };
 
@@ -302,10 +323,14 @@ export default function NewCompetitionPage() {
               if (coords && Array.isArray(coords) && coords.length === 2) {
                 const lat = coords[0];
                 const lng = coords[1];
+                const fallbackCity = extractCityName(firstGeoObject, name);
                 
+                applyMapPoint(lat, lng, fallbackCity);
                 resolveCityNameByCoords(w.ymaps, lat, lng, name)
-                  .then((cityName) => applyMapPoint(lat, lng, cityName))
-                  .catch(() => applyMapPoint(lat, lng, name));
+                  .then((cityName) => {
+                    if (cityName) applyMapPoint(lat, lng, cityName);
+                  })
+                  .catch(() => {});
 
                 if (!markerRef.current) {
                   markerRef.current = new w.ymaps.Placemark([lat, lng], {}, {
@@ -347,9 +372,12 @@ export default function NewCompetitionPage() {
         const lng = coords[1];
         if (typeof lat !== "number" || typeof lng !== "number") return;
 
+        applyMapPoint(lat, lng);
         resolveCityNameByCoords(w.ymaps, lat, lng)
-          .then((city) => applyMapPoint(lat, lng, city))
-          .catch(() => applyMapPoint(lat, lng));
+          .then((city) => {
+            if (city) applyMapPoint(lat, lng, city);
+          })
+          .catch(() => {});
 
         if (!markerRef.current) {
           markerRef.current = new w.ymaps.Placemark([lat, lng], {}, {
