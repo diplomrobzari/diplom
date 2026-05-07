@@ -133,7 +133,24 @@ export default function EditCompetitionPage() {
     geoResult?.geoObjects?.toArray?.()?.[0] ??
     null;
 
+  const resolveCityNameFromCoordsApi = async (lat: number, lng: number) => {
+    const params = new URLSearchParams({
+      lat: String(lat),
+      lng: String(lng),
+    });
+    const response = await apiFetch<{ city?: string | null }>(`/geocode?${params.toString()}`);
+
+    return normalizeCityName(response.city);
+  };
+
   const resolveCityNameByCoords = async (ymaps: any, lat: number, lng: number, fallback = "") => {
+    try {
+      const city = await resolveCityNameFromCoordsApi(lat, lng);
+      if (city) return city;
+    } catch {
+      // If server-side reverse geocoding is unavailable, try the browser map API.
+    }
+
     const attempts = [
       { request: [lat, lng], options: { results: 1, kind: "locality" } },
       { request: [lat, lng], options: { results: 1 } },

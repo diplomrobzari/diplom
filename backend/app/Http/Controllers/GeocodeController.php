@@ -79,24 +79,28 @@ class GeocodeController extends Controller
     {
         $apiKey = config('services.yandex.geocoder_key');
         if (!$apiKey) {
+            $fallback = $this->requestNominatimReverse($lat, $lng);
+            if ($fallback) {
+                return response()->json($fallback);
+            }
+
             return response()->json([
                 'error' => 'Геокодер не настроен. Добавьте YANDEX_GEOCODER_API_KEY в .env',
             ], 503);
         }
 
         $members = $this->requestYandex($apiKey, "{$lng},{$lat}", 'locality', 1, 'longlat');
-        if ($members === null) {
-            return $this->yandexUnavailableResponse();
-        }
 
         if (empty($members)) {
             $members = $this->requestYandex($apiKey, "{$lng},{$lat}", null, 1, 'longlat');
-            if ($members === null) {
-                return $this->yandexUnavailableResponse();
-            }
         }
 
         if (empty($members)) {
+            $fallback = $this->requestNominatimReverse($lat, $lng);
+            if ($fallback) {
+                return response()->json($fallback);
+            }
+
             return response()->json([
                 'city' => null,
                 'address' => null,
@@ -147,6 +151,47 @@ class GeocodeController extends Controller
         }
 
         return $data['response']['GeoObjectCollection']['featureMember'] ?? [];
+    }
+
+    private function requestNominatimReverse(float $lat, float $lng): ?array
+    {
+        $response = Http::withHeaders([
+            'User-Agent' => config('app.name', 'Nastarte') . '/1.0',
+        ])->timeout(5)->get('https://nominatim.openstreetmap.org/reverse', [
+            'format' => 'jsonv2',
+            'lat' => $lat,
+            'lon' => $lng,
+            'accept-language' => 'ru',
+            'addressdetails' => 1,
+            'zoom' => 10,
+        ]);
+
+        if (!$response->successful()) {
+            return null;
+        }
+
+        $data = $response->json();
+        $address = $data['address'] ?? [];
+        $city = $address['city']
+            ?? $address['town']
+            ?? $address['village']
+            ?? $address['municipality']
+            ?? $address['hamlet']
+            ?? $address['county']
+            ?? null;
+
+        if (!$city) {
+            return null;
+        }
+
+        return [
+            'city' => $city,
+            'address' => $data['display_name'] ?? null,
+            'name' => $city,
+            'latitude' => $lat,
+            'longitude' => $lng,
+            'source' => 'nominatim',
+        ];
     }
 
     private function yandexUnavailableResponse()
