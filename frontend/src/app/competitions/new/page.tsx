@@ -80,6 +80,11 @@ export default function NewCompetitionPage() {
   const extractCityName = (geoObject: any, fallback = "") => {
     if (!geoObject) return fallback;
 
+    const localities = geoObject.getLocalities?.();
+    if (Array.isArray(localities) && localities[0]) {
+      return localities[0];
+    }
+
     const directName = geoObject.properties?.get?.("name");
     const text = geoObject.properties?.get?.("text");
     const description = geoObject.properties?.get?.("description");

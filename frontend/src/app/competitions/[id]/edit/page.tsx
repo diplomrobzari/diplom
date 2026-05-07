@@ -73,6 +73,40 @@ export default function EditCompetitionPage() {
   const mapInstanceRef = useRef<any>(null);
   const markerRef = useRef<any>(null);
 
+  const extractCityName = (geoObject: any, fallback = "") => {
+    if (!geoObject) return fallback;
+
+    const localities = geoObject.getLocalities?.();
+    if (Array.isArray(localities) && localities[0]) {
+      return localities[0];
+    }
+
+    const directName = geoObject.properties?.get?.("name");
+    const text = geoObject.properties?.get?.("text");
+    const description = geoObject.properties?.get?.("description");
+    const metaData = geoObject.properties?.get?.("metaDataProperty");
+    const geocoderMetaData = metaData?.GeocoderMetaData;
+    const components = geocoderMetaData?.Address?.Components || [];
+    const addressDetails = geocoderMetaData?.AddressDetails?.Country;
+
+    const localityComponent = components.find((component: any) => component?.kind === "locality");
+    const localityFromDetails =
+      addressDetails?.AdministrativeArea?.Locality?.LocalityName ||
+      addressDetails?.AdministrativeArea?.SubAdministrativeArea?.Locality?.LocalityName ||
+      addressDetails?.AdministrativeArea?.SubAdministrativeArea?.DependentLocality?.DependentLocalityName ||
+      addressDetails?.AdministrativeArea?.DependentLocality?.DependentLocalityName ||
+      "";
+
+    return (
+      localityComponent?.name ||
+      localityFromDetails ||
+      directName ||
+      description ||
+      text ||
+      fallback
+    );
+  };
+
   useEffect(() => {
     const load = async () => {
       try {
@@ -192,11 +226,25 @@ export default function EditCompetitionPage() {
         const lng = coords[1];
         if (typeof lat !== "number" || typeof lng !== "number") return;
 
-        setForm((p) => ({
-          ...p,
-          latitude: lat.toString(),
-          longitude: lng.toString(),
-        }));
+        w.ymaps.geocode([lat, lng], { results: 1 })
+          .then((geoRes: any) => {
+            const geoObject = geoRes.geoObjects.get(0);
+            const city = extractCityName(geoObject, "");
+
+            setForm((p) => ({
+              ...p,
+              city: city || p.city,
+              latitude: lat.toString(),
+              longitude: lng.toString(),
+            }));
+          })
+          .catch(() => {
+            setForm((p) => ({
+              ...p,
+              latitude: lat.toString(),
+              longitude: lng.toString(),
+            }));
+          });
 
         if (!markerRef.current) {
           markerRef.current = new w.ymaps.Placemark([lat, lng], {}, {
