@@ -117,6 +117,47 @@ export default function NewCompetitionPage() {
     );
   };
 
+  const getFirstGeoObject = (geoResult: any) =>
+    geoResult?.geoObjects?.get?.(0) ??
+    geoResult?.geoObjects?.toArray?.()?.[0] ??
+    null;
+
+  const resolveCityNameByCoords = async (ymaps: any, lat: number, lng: number, fallback = "") => {
+    const attempts = [
+      { results: 1, kind: "locality" },
+      { results: 1 },
+    ];
+
+    for (const options of attempts) {
+      try {
+        const geoResult = await ymaps.geocode([lat, lng], options);
+        const geoObject = getFirstGeoObject(geoResult);
+        const city = extractCityName(geoObject, "");
+
+        if (city.trim()) {
+          return city.trim();
+        }
+      } catch {
+        // Try the next geocoding strategy.
+      }
+    }
+
+    return fallback.trim();
+  };
+
+  const applyMapPoint = (lat: number, lng: number, city = "") => {
+    setForm((p) => ({
+      ...p,
+      city: city || p.city,
+      latitude: lat.toString(),
+      longitude: lng.toString(),
+    }));
+
+    if (city) {
+      setFieldErrors((prev) => ({ ...prev, city: "" }));
+    }
+  };
+
   useEffect(() => {
     apiFetch<Category[]>("/categories").then(setCategories);
     apiFetch<Tag[]>("/tags").then(setTags);
@@ -247,22 +288,9 @@ export default function NewCompetitionPage() {
                 const lat = coords[0];
                 const lng = coords[1];
                 
-                w.ymaps.geocode([lat, lng], { results: 1, kind: "locality" })
-                  .then((geoRes: any) => {
-                    const geoObject = geoRes.geoObjects.get(0);
-                    const cityName = extractCityName(geoObject, name);
-                    return cityName;
-                  })
-                  .catch(() => name)
-                  .then((cityName: string) => {
-                    setForm((p) => ({
-                      ...p,
-                      city: cityName,
-                      latitude: lat.toString(),
-                      longitude: lng.toString(),
-                    }));
-                    setFieldErrors((prev) => ({ ...prev, city: "" }));
-                  });
+                resolveCityNameByCoords(w.ymaps, lat, lng, name)
+                  .then((cityName) => applyMapPoint(lat, lng, cityName))
+                  .catch(() => applyMapPoint(lat, lng, name));
 
                 if (!markerRef.current) {
                   markerRef.current = new w.ymaps.Placemark([lat, lng], {}, {
@@ -304,36 +332,9 @@ export default function NewCompetitionPage() {
         const lng = coords[1];
         if (typeof lat !== "number" || typeof lng !== "number") return;
 
-        w.ymaps.geocode([lat, lng], { results: 1, kind: "locality" })
-          .then((geoRes: any) => {
-            const geoObject = geoRes.geoObjects.get(0);
-            if (geoObject) {
-              const city = extractCityName(geoObject, "");
-              
-              setForm((p) => ({
-                ...p,
-                city: city || p.city,
-                latitude: lat.toString(),
-                longitude: lng.toString(),
-              }));
-              if (city) {
-                setFieldErrors((prev) => ({ ...prev, city: "" }));
-              }
-            } else {
-              setForm((p) => ({
-                ...p,
-                latitude: lat.toString(),
-                longitude: lng.toString(),
-              }));
-            }
-          })
-          .catch(() => {
-            setForm((p) => ({
-              ...p,
-              latitude: lat.toString(),
-              longitude: lng.toString(),
-            }));
-          });
+        resolveCityNameByCoords(w.ymaps, lat, lng)
+          .then((city) => applyMapPoint(lat, lng, city))
+          .catch(() => applyMapPoint(lat, lng));
 
         if (!markerRef.current) {
           markerRef.current = new w.ymaps.Placemark([lat, lng], {}, {
