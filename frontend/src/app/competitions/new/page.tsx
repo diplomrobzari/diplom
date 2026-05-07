@@ -123,21 +123,6 @@ export default function NewCompetitionPage() {
     null;
 
   const resolveCityNameByCoords = async (ymaps: any, lat: number, lng: number, fallback = "") => {
-    try {
-      const params = new URLSearchParams({
-        lat: String(lat),
-        lng: String(lng),
-      });
-      const response = await apiFetch<{ city?: string | null }>(`/geocode?${params.toString()}`);
-      const city = response.city?.trim();
-
-      if (city) {
-        return city;
-      }
-    } catch {
-      // Browser geocoding below is still available as a fallback.
-    }
-
     const attempts = [
       { results: 1, kind: "locality" },
       { results: 1 },
@@ -155,6 +140,21 @@ export default function NewCompetitionPage() {
       } catch {
         // Try the next geocoding strategy.
       }
+    }
+
+    try {
+      const params = new URLSearchParams({
+        lat: String(lat),
+        lng: String(lng),
+      });
+      const response = await apiFetch<{ city?: string | null }>(`/geocode?${params.toString()}`);
+      const city = response.city?.trim();
+
+      if (city) {
+        return city;
+      }
+    } catch {
+      // Backend reverse geocoding is only a backup for the browser API.
     }
 
     return fallback.trim();

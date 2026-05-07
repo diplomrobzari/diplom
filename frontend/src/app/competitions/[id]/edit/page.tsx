@@ -119,21 +119,6 @@ export default function EditCompetitionPage() {
     null;
 
   const resolveCityNameByCoords = async (ymaps: any, lat: number, lng: number, fallback = "") => {
-    try {
-      const params = new URLSearchParams({
-        lat: String(lat),
-        lng: String(lng),
-      });
-      const response = await apiFetch<{ city?: string | null }>(`/geocode?${params.toString()}`);
-      const city = response.city?.trim();
-
-      if (city) {
-        return city;
-      }
-    } catch {
-      // Browser geocoding below is still available as a fallback.
-    }
-
     const attempts = [
       { results: 1, kind: "locality" },
       { results: 1 },
@@ -151,6 +136,21 @@ export default function EditCompetitionPage() {
       } catch {
         // Try the next geocoding strategy.
       }
+    }
+
+    try {
+      const params = new URLSearchParams({
+        lat: String(lat),
+        lng: String(lng),
+      });
+      const response = await apiFetch<{ city?: string | null }>(`/geocode?${params.toString()}`);
+      const city = response.city?.trim();
+
+      if (city) {
+        return city;
+      }
+    } catch {
+      // Backend reverse geocoding is only a backup for the browser API.
     }
 
     return fallback.trim();
@@ -223,34 +223,73 @@ export default function EditCompetitionPage() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const w = window as any;
-    if (w.ymaps) {
-      w.ymaps.ready(() => setMapLoaded(true));
-      return;
-    }
-    const existing = document.querySelector<HTMLScriptElement>('script[data-yandex-maps="true"]');
-    if (existing) {
-      const checkYmaps = () => {
-        if (w.ymaps) {
-          w.ymaps.ready(() => setMapLoaded(true));
-        } else {
-          setTimeout(checkYmaps, 100);
-        }
-      };
-      checkYmaps();
-      return;
-    }
-    const script = document.createElement("script");
-    script.src = `https://api-maps.yandex.ru/2.1/?lang=ru_RU`;
-    script.async = true;
-    script.dataset.yandexMaps = "true";
-    script.onload = () => {
-      if (w.ymaps) {
-        w.ymaps.ready(() => setMapLoaded(true));
-      }
-    };
-    document.head.appendChild(script);
-  }, []);
+    let cancelled = false;
 
+    const waitForYmapsReady = (timeoutMs = 12000) =>
+      new Promise<void>((resolve, reject) => {
+        const started = Date.now();
+        const poll = () => {
+          if (cancelled) return;
+          if (w.ymaps) {
+            w.ymaps.ready(() => resolve());
+            return;
+          }
+          if (Date.now() - started > timeoutMs) {
+            reject(new Error("Yandex Maps API did not initialize in time"));
+            return;
+          }
+          setTimeout(poll, 100);
+        };
+        poll();
+      });
+
+    const injectScript = (src: string, marker: string) =>
+      new Promise<void>((resolve, reject) => {
+        const existing = document.querySelector<HTMLScriptElement>(`script[data-yandex-maps="${marker}"]`);
+        if (existing) {
+          resolve();
+          return;
+        }
+        const script = document.createElement("script");
+        script.src = src;
+        script.async = true;
+        script.dataset.yandexMaps = marker;
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error(`Failed to load ${src}`));
+        document.head.appendChild(script);
+      });
+
+    const loadMaps = async () => {
+      if (w.ymaps) {
+        await waitForYmapsReady();
+        if (!cancelled) setMapLoaded(true);
+        return;
+      }
+
+      const apiKey = process.env.NEXT_PUBLIC_YANDEX_MAPS_API_KEY || "1120422d-4dd2-412a-ac0b-56b3bbf0ac10";
+      const withKey = `https://api-maps.yandex.ru/2.1/?apikey=${encodeURIComponent(apiKey)}&lang=ru_RU`;
+      const withoutKey = "https://api-maps.yandex.ru/2.1/?lang=ru_RU";
+
+      try {
+        await injectScript(withKey, "with-key");
+        await waitForYmapsReady();
+      } catch (firstError) {
+        console.warn("[Yandex Maps] Primary load failed, retrying without key", firstError);
+        await injectScript(withoutKey, "no-key-fallback");
+        await waitForYmapsReady();
+      }
+
+      if (!cancelled) setMapLoaded(true);
+    };
+
+    loadMaps().catch((err: unknown) => {
+      console.error("[Yandex Maps] Ошибка загрузки:", err);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   useEffect(() => {
     if (!mapLoaded) return;
     if (!mapRef.current) return;
