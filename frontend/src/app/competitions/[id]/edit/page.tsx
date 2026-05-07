@@ -81,6 +81,7 @@ export default function EditCompetitionPage() {
       return localities[0];
     }
 
+    const administrativeAreas = geoObject.getAdministrativeAreas?.();
     const directName = geoObject.properties?.get?.("name");
     const text = geoObject.properties?.get?.("text");
     const description = geoObject.properties?.get?.("description");
@@ -90,6 +91,8 @@ export default function EditCompetitionPage() {
     const addressDetails = geocoderMetaData?.AddressDetails?.Country;
 
     const localityComponent = components.find((component: any) => component?.kind === "locality");
+    const provinceComponent = components.find((component: any) => component?.kind === "province");
+    const areaComponent = components.find((component: any) => component?.kind === "area");
     const localityFromDetails =
       addressDetails?.AdministrativeArea?.Locality?.LocalityName ||
       addressDetails?.AdministrativeArea?.SubAdministrativeArea?.Locality?.LocalityName ||
@@ -100,6 +103,9 @@ export default function EditCompetitionPage() {
     return (
       localityComponent?.name ||
       localityFromDetails ||
+      provinceComponent?.name ||
+      areaComponent?.name ||
+      administrativeAreas?.[0] ||
       directName ||
       description ||
       text ||
@@ -226,7 +232,7 @@ export default function EditCompetitionPage() {
         const lng = coords[1];
         if (typeof lat !== "number" || typeof lng !== "number") return;
 
-        w.ymaps.geocode([lat, lng], { results: 1 })
+        w.ymaps.geocode([lat, lng], { results: 1, kind: "locality" })
           .then((geoRes: any) => {
             const geoObject = geoRes.geoObjects.get(0);
             const city = extractCityName(geoObject, "");
@@ -237,6 +243,9 @@ export default function EditCompetitionPage() {
               latitude: lat.toString(),
               longitude: lng.toString(),
             }));
+            if (city) {
+              setFieldErrors((prev) => ({ ...prev, city: "" }));
+            }
           })
           .catch(() => {
             setForm((p) => ({

@@ -36,6 +36,9 @@ class CompetitionSeeder extends Seeder
             ['email' => 'participant3@nastarte.ru', 'surname' => 'Кузнецов', 'name' => 'Дмитрий', 'username' => 'participant3'],
             ['email' => 'participant4@nastarte.ru', 'surname' => 'Волкова', 'name' => 'Анна', 'username' => 'participant4'],
             ['email' => 'participant5@nastarte.ru', 'surname' => 'Морозов', 'name' => 'Павел', 'username' => 'participant5'],
+            ['email' => 'participant6@nastarte.ru', 'surname' => 'Smirnov', 'name' => 'Nikita', 'username' => 'participant6'],
+            ['email' => 'participant7@nastarte.ru', 'surname' => 'Orlova', 'name' => 'Elena', 'username' => 'participant7'],
+            ['email' => 'participant8@nastarte.ru', 'surname' => 'Fedorov', 'name' => 'Roman', 'username' => 'participant8'],
         ])->map(fn (array $user) => User::firstOrCreate(
             ['email' => $user['email']],
             [
@@ -72,6 +75,18 @@ class CompetitionSeeder extends Seeder
         ]);
 
         $now = CarbonImmutable::now();
+        $currentYear = (int) $now->format('Y');
+        $pastWinterYear = $now->month <= 2 ? $currentYear - 1 : $currentYear;
+        $futureWinterYear = $now->month >= 3 ? $currentYear + 1 : $currentYear;
+        $pastWinterDates = [
+            CarbonImmutable::create($pastWinterYear, 1, 18, 10, 0),
+            CarbonImmutable::create($pastWinterYear, 2, 8, 11, 0),
+        ];
+        $futureWinterDates = [
+            CarbonImmutable::create($futureWinterYear, 1, 17, 10, 0),
+            CarbonImmutable::create($futureWinterYear, 2, 7, 11, 0),
+            CarbonImmutable::create($futureWinterYear, 2, 21, 10, 30),
+        ];
         $items = [
             ['status' => 'finished', 'title' => 'Весенний забег 5 км', 'category' => 'sport', 'city' => 'Москва', 'starts_at' => $now->subDays(42), 'ends_at' => $now->subDays(42)->addHours(2), 'tags' => ['beginner', 'offline']],
             ['status' => 'finished', 'title' => 'Шахматный блиц-турнир', 'category' => 'intellectual', 'city' => 'Санкт-Петербург', 'starts_at' => $now->subDays(38), 'ends_at' => $now->subDays(38)->addHours(3), 'tags' => ['individual', 'rating']],
@@ -95,9 +110,42 @@ class CompetitionSeeder extends Seeder
             ['status' => 'pending_review', 'title' => 'Модерация: чемпионат по хот-догам', 'category' => 'food', 'city' => 'Краснодар', 'starts_at' => $now->addDays(45), 'ends_at' => $now->addDays(45)->addHours(2), 'tags' => ['offline', 'individual']],
         ];
 
+        $finishedResults = [
+            [0, 1, 2, 3],
+            [1, 0, 3, 4],
+            [2, 1, 0, 5],
+            [0, 2, 1, 6],
+            [3, 4, 0, 1],
+            [4, 1, 2, 0],
+            [1, 5, 0, 3],
+            [2, 0, 1, 4],
+        ];
+        $finishedIndex = 0;
+        $pastWinterIndex = 0;
+        $futureWinterIndex = 0;
+
         foreach ($items as $index => $item) {
+            if ($item['category'] === 'winter-sport') {
+                if ($item['status'] === 'finished') {
+                    $winterDate = $pastWinterDates[$pastWinterIndex % count($pastWinterDates)];
+                    $pastWinterIndex++;
+                } else {
+                    $winterDate = $futureWinterDates[$futureWinterIndex % count($futureWinterDates)];
+                    $futureWinterIndex++;
+                }
+
+                $item['starts_at'] = $winterDate;
+                $item['ends_at'] = $winterDate->addHours(4);
+            }
+
             $maxParticipants = $item['status'] === 'pending_review' ? 20 : 30;
-            $demoParticipants = $item['status'] === 'finished' ? $participants->take(3) : $participants->take(2);
+            $demoParticipantIndexes = $item['status'] === 'finished'
+                ? ($finishedResults[$finishedIndex++] ?? [0, 1, 2])
+                : [0, 1];
+            $demoParticipants = collect($demoParticipantIndexes)
+                ->map(fn (int $participantIndex) => $participants->get($participantIndex))
+                ->filter()
+                ->values();
 
             $competition = Competition::updateOrCreate(
                 ['title' => $item['title']],
@@ -124,6 +172,10 @@ class CompetitionSeeder extends Seeder
             );
 
             $competition->tags()->sync(collect($item['tags'])->map(fn (string $slug) => $tags[$slug]->id)->all());
+
+            Participation::withTrashed()
+                ->where('competition_id', $competition->id)
+                ->forceDelete();
 
             if ($item['status'] !== 'pending_review') {
                 foreach ($demoParticipants as $place => $participant) {

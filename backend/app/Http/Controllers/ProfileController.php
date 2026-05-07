@@ -123,6 +123,7 @@ class ProfileController extends Controller
                 },
             ])
             ->orderByDesc($orderColumn)
+            ->orderByDesc('participations_count')
             ->orderBy('surname')
             ->orderBy('name')
             ->limit($limit)
