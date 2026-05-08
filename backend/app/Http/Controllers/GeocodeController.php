@@ -163,22 +163,33 @@ class GeocodeController extends Controller
 
     private function requestNominatimReverse(float $lat, float $lng): ?array
     {
-        $response = Http::withHeaders([
-            'User-Agent' => config('app.name', 'Nastarte') . '/1.0',
-        ])->timeout(5)->get('https://nominatim.openstreetmap.org/reverse', [
-            'format' => 'jsonv2',
-            'lat' => $lat,
-            'lon' => $lng,
-            'accept-language' => 'ru',
-            'addressdetails' => 1,
-            'zoom' => 10,
-        ]);
+        foreach ([18, 16, 14, 12, 10] as $zoom) {
+            $response = Http::withHeaders([
+                'User-Agent' => config('app.name', 'Nastarte') . '/1.0',
+            ])->timeout(5)->get('https://nominatim.openstreetmap.org/reverse', [
+                'format' => 'jsonv2',
+                'lat' => $lat,
+                'lon' => $lng,
+                'accept-language' => 'ru',
+                'addressdetails' => 1,
+                'zoom' => $zoom,
+            ]);
 
-        if (!$response->successful()) {
-            return null;
+            if (!$response->successful()) {
+                continue;
+            }
+
+            $result = $this->nominatimResultFromResponse($response->json(), $lat, $lng);
+            if ($result && !$this->isAdministrativeName($result['city'] ?? null)) {
+                return $result;
+            }
         }
 
-        $data = $response->json();
+        return null;
+    }
+
+    private function nominatimResultFromResponse(array $data, float $lat, float $lng): ?array
+    {
         $address = $data['address'] ?? [];
         $city = $this->firstNonEmpty([
             $address['village'] ?? null,

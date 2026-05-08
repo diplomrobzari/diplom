@@ -116,7 +116,7 @@ export default function NewCompetitionPage() {
 
     const localities = geoObject.getLocalities?.();
     const localityFromGetter = Array.isArray(localities) ? firstCityCandidate(...localities) : "";
-    if (localityFromGetter) {
+    if (localityFromGetter && !isAdministrativeName(localityFromGetter)) {
       return localityFromGetter;
     }
 
@@ -201,7 +201,7 @@ export default function NewCompetitionPage() {
           const geoObject = getFirstGeoObject(geoResult);
           const city = extractCityName(geoObject, fallback);
 
-          if (city.trim()) {
+          if (city.trim() && !isAdministrativeName(city)) {
             return city.trim();
           }
         } catch {
