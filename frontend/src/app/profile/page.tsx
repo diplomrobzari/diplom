@@ -740,7 +740,7 @@ export default function ProfilePage() {
                     <option value="none">Без рамки</option>
                     {(customization?.avatar_frames ?? []).map((frame) => (
                       <option key={frame.key} value={frame.key} disabled={!frame.is_unlocked}>
-                        {frame.name} {!frame.is_unlocked ? `(нужно: ${frame.required_tasks}, нечетное число)` : ""}
+                        {frame.name} {!frame.is_unlocked ? `(Достижений для разблокировки: ${frame.required_tasks})` : ""}
                       </option>
                     ))}
                   </select>
@@ -792,7 +792,7 @@ export default function ProfilePage() {
                     <option value="none">Без фона</option>
                     {(customization?.profile_backgrounds ?? []).map((bg) => (
                       <option key={bg.key} value={bg.key} disabled={!bg.is_unlocked}>
-                        {bg.name} {!bg.is_unlocked ? `(нужно: ${bg.required_tasks}, четное число)` : ""}
+                        {bg.name} {!bg.is_unlocked ? `(Достижений для разблокировки: ${bg.required_tasks})` : ""}
                       </option>
                     ))}
                   </select>

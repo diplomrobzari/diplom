@@ -37,7 +37,8 @@ function validateCompetition(form: Record<string, string | number>): Record<stri
   }
 
   const maxP = Number(form.max_participants) || 0;
-  if (maxP < 0) errs.max_participants = "Минимум 0";
+  if (maxP <= 0) errs.max_participants = "Количество мест должно быть больше 0";
+  else if (maxP > 100) errs.max_participants = "Количество мест не может быть больше 100";
 
   if (form.custom_category && (form.custom_category as string).length > 255) {
     errs.custom_category = "Максимум 255 символов";
@@ -62,7 +63,7 @@ export default function NewCompetitionPage() {
     longitude: "",
     starts_at: "",
     ends_at: "",
-    max_participants: 0,
+    max_participants: 1,
     category_id: "",
     custom_category: "",
   });
@@ -672,7 +673,8 @@ export default function NewCompetitionPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">Мест</label>
                 <input
                   type="number"
-                  min={0}
+                  min={1}
+                  max={100}
                   className={`w-full rounded-xl border-2 ${fieldErrors.max_participants ? "border-red-500" : "border-gray-200"} px-4 py-3 text-gray-700 focus:border-[#7D39EB] focus:outline-none transition-colors`}
                   value={form.max_participants}
                   onChange={(e) => { setForm((p) => ({ ...p, max_participants: Number(e.target.value) || 0 })); setFieldErrors((prev) => ({ ...prev, max_participants: "" })); }}

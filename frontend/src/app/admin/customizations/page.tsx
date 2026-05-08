@@ -170,16 +170,16 @@ export default function AdminCustomizationsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+      <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
         <h2 className="mb-2 text-xl font-bold uppercase text-[#7D39EB]">Кастомизация профиля</h2>
         <p className="text-sm text-gray-600">
           Новые фоны добавляются по четным шагам достижений, рамки — по нечетным.
         </p>
       </div>
 
-      <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+      <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
         <h3 className="mb-4 text-lg font-bold text-[#7D39EB]">Добавить элемент</h3>
-        <form onSubmit={handleCreate} className="grid gap-3 sm:grid-cols-4">
+        <form onSubmit={handleCreate} className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <select
             value={newType}
             onChange={(e) => setNewType(e.target.value as "frame" | "background")}
@@ -215,15 +215,15 @@ export default function AdminCustomizationsPage() {
           <div className="h-10 w-10 animate-spin rounded-full border-2 border-[#7D39EB] border-t-[#C6FF33]" />
         </div>
       ) : (
-        <div className="grid gap-6 lg:grid-cols-2">
-          <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="grid min-w-0 gap-6 lg:grid-cols-2">
+          <section className="min-w-0 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
             <h3 className="mb-4 text-lg font-bold text-[#7D39EB]">Рамки</h3>
             <div className="space-y-3">
               {visibleFrames.map((item) => (
                 <div key={item.id} className="rounded-xl border border-gray-200 p-3">
-                  <div className="mb-2 flex items-center justify-between gap-3">
-                    <span className="text-sm font-semibold text-gray-700">За {item.required_tasks} достижений</span>
-                    <div className="flex gap-2">
+                  <div className="mb-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <span className="text-sm font-semibold text-gray-700">Достижений для разблокировки: {item.required_tasks}</span>
+                    <div className="flex flex-col gap-2 sm:flex-row">
                       <button onClick={() => startEdit(item)} className="btn-secondary px-3 py-1 text-xs">Изменить</button>
                       <button onClick={() => handleDelete(item.id)} className="btn-danger px-3 py-1 text-xs">Удалить</button>
                     </div>
@@ -246,7 +246,7 @@ export default function AdminCustomizationsPage() {
                         {editingFile ? "Новый файл выбран" : "Выбрать новый файл"}
                       </label>
                       {editingFile && <p className="text-xs text-gray-500">{editingFile.name}</p>}
-                      <div className="flex gap-2">
+                      <div className="flex flex-col gap-2 sm:flex-row">
                         <button onClick={() => handleUpdate(item.id)} className="btn-primary px-3 py-1 text-xs">Сохранить</button>
                         <button onClick={() => setEditingId(null)} className="btn-secondary px-3 py-1 text-xs">Отмена</button>
                       </div>
@@ -261,14 +261,14 @@ export default function AdminCustomizationsPage() {
             </div>
           </section>
 
-          <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+          <section className="min-w-0 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
             <h3 className="mb-4 text-lg font-bold text-[#7D39EB]">Фоны</h3>
             <div className="space-y-3">
               {visibleBackgrounds.map((item) => (
                 <div key={item.id} className="rounded-xl border border-gray-200 p-3">
-                  <div className="mb-2 flex items-center justify-between gap-3">
-                    <span className="text-sm font-semibold text-gray-700">За {item.required_tasks} достижений</span>
-                    <div className="flex gap-2">
+                  <div className="mb-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <span className="text-sm font-semibold text-gray-700">Достижений для разблокировки: {item.required_tasks}</span>
+                    <div className="flex flex-col gap-2 sm:flex-row">
                       <button onClick={() => startEdit(item)} className="btn-secondary px-3 py-1 text-xs">Изменить</button>
                       <button onClick={() => handleDelete(item.id)} className="btn-danger px-3 py-1 text-xs">Удалить</button>
                     </div>
@@ -295,7 +295,7 @@ export default function AdminCustomizationsPage() {
                         {editingFile ? "Новый файл выбран" : "Выбрать новый файл"}
                       </label>
                       {editingFile && <p className="text-xs text-gray-500">{editingFile.name}</p>}
-                      <div className="flex gap-2">
+                      <div className="flex flex-col gap-2 sm:flex-row">
                         <button onClick={() => handleUpdate(item.id)} className="btn-primary px-3 py-1 text-xs">Сохранить</button>
                         <button onClick={() => setEditingId(null)} className="btn-secondary px-3 py-1 text-xs">Отмена</button>
                       </div>

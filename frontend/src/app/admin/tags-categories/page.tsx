@@ -199,11 +199,11 @@ export default function AdminTagsCategoriesPage() {
   );
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
-      <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+    <div className="grid min-w-0 gap-6 lg:grid-cols-2">
+      <div className="min-w-0 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
         <h2 className="mb-4 text-xl font-bold uppercase text-[#7D39EB]">Категории</h2>
 
-        <form onSubmit={handleAddCategory} className="mb-6 flex gap-2">
+        <form onSubmit={handleAddCategory} className="mb-6 flex flex-col gap-2 sm:flex-row">
           <input
             type="text"
             value={newCategory}
@@ -215,7 +215,7 @@ export default function AdminTagsCategoriesPage() {
           <button
             type="submit"
             disabled={processing || !newCategory.trim()}
-            className="btn-primary px-6 py-3"
+            className="btn-primary px-6 py-3 sm:w-auto"
           >
             Добавить
           </button>
@@ -228,9 +228,9 @@ export default function AdminTagsCategoriesPage() {
         ) : (
           <div className="space-y-2">
             {visibleCategories.map((cat) => (
-              <div key={cat.id} className="flex items-center justify-between rounded-xl border border-gray-200 p-3">
+              <div key={cat.id} className="flex flex-col gap-3 rounded-xl border border-gray-200 p-3 sm:flex-row sm:items-center sm:justify-between">
                 {editingCategory === cat.id ? (
-                  <div className="flex flex-1 gap-2">
+                  <div className="flex w-full flex-col gap-2 sm:flex-row">
                     <input
                       type="text"
                       value={editValue}
@@ -253,8 +253,8 @@ export default function AdminTagsCategoriesPage() {
                   </div>
                 ) : (
                   <>
-                    <span className="font-medium text-gray-700">{cat.name}</span>
-                    <div className="flex gap-2">
+                    <span className="break-words font-medium text-gray-700">{cat.name}</span>
+                    <div className="flex flex-col gap-2 sm:flex-row">
                       <button
                         onClick={() => {
                           setEditingCategory(cat.id);
@@ -281,10 +281,10 @@ export default function AdminTagsCategoriesPage() {
         )}
       </div>
 
-      <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+      <div className="min-w-0 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
         <h2 className="mb-4 text-xl font-bold uppercase text-[#7D39EB]">Теги</h2>
 
-        <form onSubmit={handleAddTag} className="mb-6 flex gap-2">
+        <form onSubmit={handleAddTag} className="mb-6 flex flex-col gap-2 sm:flex-row">
           <input
             type="text"
             value={newTag}
@@ -296,7 +296,7 @@ export default function AdminTagsCategoriesPage() {
           <button
             type="submit"
             disabled={processing || !newTag.trim()}
-            className="btn-primary px-6 py-3"
+            className="btn-primary px-6 py-3 sm:w-auto"
           >
             Добавить
           </button>
@@ -309,9 +309,9 @@ export default function AdminTagsCategoriesPage() {
         ) : (
           <div className="space-y-2">
             {visibleTags.map((tag) => (
-              <div key={tag.id} className="flex items-center justify-between rounded-xl border border-gray-200 p-3">
+              <div key={tag.id} className="flex flex-col gap-3 rounded-xl border border-gray-200 p-3 sm:flex-row sm:items-center sm:justify-between">
                 {editingTag === tag.id ? (
-                  <div className="flex flex-1 gap-2">
+                  <div className="flex w-full flex-col gap-2 sm:flex-row">
                     <input
                       type="text"
                       value={editValue}
@@ -334,8 +334,8 @@ export default function AdminTagsCategoriesPage() {
                   </div>
                 ) : (
                   <>
-                    <span className="font-medium text-gray-700">#{tag.name}</span>
-                    <div className="flex gap-2">
+                    <span className="break-words font-medium text-gray-700">#{tag.name}</span>
+                    <div className="flex flex-col gap-2 sm:flex-row">
                       <button
                         onClick={() => {
                           setEditingTag(tag.id);

@@ -180,11 +180,11 @@ export default function AdminReviewPage() {
                     </div>
 
                     {comp.moderation_comment && (
-                      <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">
+                      <div className="mt-4 rounded-xl border border-[#7D39EB]/30 bg-[#7D39EB]/10 p-4">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-[#7D39EB]">
                           Комментарий к доработке
                         </p>
-                        <p className="mt-2 whitespace-pre-line text-sm text-amber-900">
+                        <p className="mt-2 whitespace-pre-line text-sm text-[#4C1D95]">
                           {comp.moderation_comment}
                         </p>
                       </div>
@@ -316,7 +316,7 @@ export default function AdminReviewPage() {
                 type="button"
                 onClick={handleRequestRevision}
                 disabled={processing === revisionTarget.id}
-                className="rounded-xl bg-amber-500 px-5 py-3 font-semibold text-white transition-colors hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-50"
+                className="btn-primary px-5 py-3"
               >
                 {processing === revisionTarget.id ? "..." : "Отправить"}
               </button>
