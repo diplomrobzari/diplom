@@ -47,7 +47,7 @@ class CompetitionSeeder extends Seeder
                 'patronymic' => 'Сергеевич',
                 'username' => $user['username'],
                 'city' => 'Москва',
-                'password' => Hash::make('password'),
+                'password' => Hash::make('12345678'),
                 'email_verified_at' => now(),
             ]
         ))->values();
