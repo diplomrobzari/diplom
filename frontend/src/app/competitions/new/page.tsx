@@ -107,7 +107,7 @@ export default function NewCompetitionPage() {
     const normalized = normalizeCityName(value);
     if (!normalized) return "";
 
-    const broadNames = /^(россия|рф|russia|москва|санкт-петербург)$/i;
+    const broadNames = /^(россия|рф|russia)$/i;
     const postalCodeOrNumber = /^\d{3,}(-\d+)?$/;
     const parts = normalized.split(",").map((part) => part.trim()).reverse();
     const settlement = parts.find((part) => (

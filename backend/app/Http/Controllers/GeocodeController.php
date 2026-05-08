@@ -316,7 +316,7 @@ class GeocodeController extends Controller
 
     private function isBroadRegionName(string $name): bool
     {
-        return (bool) preg_match('/^(россия|рф|russia|москва|санкт-петербург)$/ui', trim($name));
+        return (bool) preg_match('/^(россия|рф|russia)$/ui', trim($name));
     }
 
     private function isPostalCodeOrNumber(string $name): bool
