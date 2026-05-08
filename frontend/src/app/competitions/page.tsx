@@ -83,7 +83,7 @@ function CompetitionsListContent() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
   const [filters, setFilters] = useState<Filters>({ sort: "newest" });
-  const [filtersOpen, setFiltersOpen] = useState(true);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [tagsOpen, setTagsOpen] = useState(false);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -121,6 +121,18 @@ function CompetitionsListContent() {
   useEffect(() => {
     apiFetch<Category[]>("/categories").then(setCategories);
     apiFetch<Tag[]>("/tags").then(setTags);
+  }, []);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(min-width: 1024px)");
+    const syncFiltersVisibility = () => setFiltersOpen(mediaQuery.matches);
+
+    syncFiltersVisibility();
+    mediaQuery.addEventListener("change", syncFiltersVisibility);
+
+    return () => {
+      mediaQuery.removeEventListener("change", syncFiltersVisibility);
+    };
   }, []);
 
   useEffect(() => {
