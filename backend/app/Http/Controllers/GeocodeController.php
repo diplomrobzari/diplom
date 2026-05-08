@@ -172,13 +172,17 @@ class GeocodeController extends Controller
 
         $data = $response->json();
         $address = $data['address'] ?? [];
-        $city = $address['city']
-            ?? $address['town']
-            ?? $address['village']
-            ?? $address['municipality']
-            ?? $address['hamlet']
-            ?? $address['county']
-            ?? null;
+        $city = $this->firstNonEmpty([
+            $address['village'] ?? null,
+            $address['hamlet'] ?? null,
+            $address['isolated_dwelling'] ?? null,
+            $address['locality'] ?? null,
+            $address['town'] ?? null,
+            $address['city'] ?? null,
+            $this->specificNameFromDisplayName($data['display_name'] ?? null),
+            $address['municipality'] ?? null,
+            $address['county'] ?? null,
+        ]);
 
         if (!$city) {
             return null;
@@ -204,23 +208,72 @@ class GeocodeController extends Controller
     private function extractLocality(array $meta, array $geo): ?string
     {
         $components = $meta['Address']['Components'] ?? [];
-        foreach (['locality', 'province', 'area'] as $kind) {
-            foreach ($components as $component) {
-                if (($component['kind'] ?? null) === $kind && !empty($component['name'])) {
-                    return $component['name'];
-                }
-            }
-        }
+        $componentName = fn (string $kind) => $this->componentName($components, $kind);
 
         $country = $meta['AddressDetails']['Country'] ?? [];
         $adminArea = $country['AdministrativeArea'] ?? [];
         $subArea = $adminArea['SubAdministrativeArea'] ?? [];
+        $geoName = $geo['name'] ?? null;
 
-        return $adminArea['Locality']['LocalityName']
-            ?? $subArea['Locality']['LocalityName']
-            ?? $subArea['DependentLocality']['DependentLocalityName']
-            ?? $adminArea['DependentLocality']['DependentLocalityName']
-            ?? $geo['name']
-            ?? null;
+        $specific = $this->firstNonEmpty([
+            $componentName('locality'),
+            $adminArea['Locality']['LocalityName'] ?? null,
+            $subArea['Locality']['LocalityName'] ?? null,
+            $subArea['DependentLocality']['DependentLocalityName'] ?? null,
+            $adminArea['DependentLocality']['DependentLocalityName'] ?? null,
+            !$this->isAdministrativeName($geoName) ? $geoName : null,
+        ]);
+
+        if ($specific) {
+            return $specific;
+        }
+
+        return $this->firstNonEmpty([
+            $componentName('province'),
+            $componentName('area'),
+            $geoName,
+        ]);
+    }
+
+    private function componentName(array $components, string $kind): ?string
+    {
+        foreach ($components as $component) {
+            if (($component['kind'] ?? null) === $kind && !empty($component['name'])) {
+                return $component['name'];
+            }
+        }
+
+        return null;
+    }
+
+    private function firstNonEmpty(array $values): ?string
+    {
+        foreach ($values as $value) {
+            if (is_string($value) && trim($value) !== '') {
+                return trim($value);
+            }
+        }
+
+        return null;
+    }
+
+    private function specificNameFromDisplayName(?string $displayName): ?string
+    {
+        if (!$displayName) {
+            return null;
+        }
+
+        $firstPart = trim(explode(',', $displayName, 2)[0] ?? '');
+
+        return !$this->isAdministrativeName($firstPart) ? $firstPart : null;
+    }
+
+    private function isAdministrativeName(?string $name): bool
+    {
+        if (!$name) {
+            return false;
+        }
+
+        return (bool) preg_match('/(округ|район|область|край|республика|муниципал)/ui', $name);
     }
 }

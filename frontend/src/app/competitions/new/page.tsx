@@ -89,6 +89,17 @@ export default function NewCompetitionPage() {
     return "";
   };
 
+  const isAdministrativeName = (value: unknown) =>
+    /(округ|район|область|край|республика|муниципал)/i.test(normalizeCityName(value));
+
+  const displayNameFirstPart = (value: unknown) => {
+    const normalized = normalizeCityName(value);
+    if (!normalized) return "";
+
+    const firstPart = normalized.split(",")[0]?.trim() || "";
+    return !isAdministrativeName(firstPart) ? firstPart : "";
+  };
+
   const extractCityName = (geoObject: any, fallback = "") => {
     if (!geoObject) return fallback;
 
@@ -120,14 +131,16 @@ export default function NewCompetitionPage() {
 
     return firstCityCandidate(
       componentName("locality"),
-      localityFromDetails ||
+      localityFromDetails,
+      !isAdministrativeName(directName) ? directName : "",
+      displayNameFirstPart(addressLine),
+      displayNameFirstPart(text),
+      !isAdministrativeName(administrativeAreas?.[0]) ? administrativeAreas?.[0] : "",
+      !isAdministrativeName(description) ? description : "",
       componentName("province"),
       componentName("area"),
-      administrativeAreas?.[0] ||
       directName,
-      description ||
       text,
-      addressLine,
       fallback
     );
   };
