@@ -100,6 +100,17 @@ export default function NewCompetitionPage() {
     return !isAdministrativeName(firstPart) ? firstPart : "";
   };
 
+  const specificNameFromAddressText = (value: unknown) => {
+    const normalized = normalizeCityName(value);
+    if (!normalized) return "";
+
+    const broadNames = /^(россия|рф|russia|москва|санкт-петербург)$/i;
+    const parts = normalized.split(",").map((part) => part.trim()).reverse();
+    const settlement = parts.find((part) => part && !isAdministrativeName(part) && !broadNames.test(part));
+
+    return settlement?.replace(/^(село|деревня|пос[её]лок|пос\.|пгт|город|г\.|хутор|станица)\s+/i, "").trim() || "";
+  };
+
   const extractCityName = (geoObject: any, fallback = "") => {
     if (!geoObject) return fallback;
 
@@ -128,15 +139,22 @@ export default function NewCompetitionPage() {
       addressDetails?.AdministrativeArea?.SubAdministrativeArea?.DependentLocality?.DependentLocalityName ||
       addressDetails?.AdministrativeArea?.DependentLocality?.DependentLocalityName ||
       "";
+    const preciseLocality = firstCityCandidate(
+      !isAdministrativeName(componentName("locality")) ? componentName("locality") : "",
+      !isAdministrativeName(localityFromDetails) ? localityFromDetails : ""
+    );
 
     return firstCityCandidate(
-      componentName("locality"),
-      localityFromDetails,
+      preciseLocality,
+      specificNameFromAddressText(addressLine),
+      specificNameFromAddressText(text),
       !isAdministrativeName(directName) ? directName : "",
       displayNameFirstPart(addressLine),
       displayNameFirstPart(text),
       !isAdministrativeName(administrativeAreas?.[0]) ? administrativeAreas?.[0] : "",
       !isAdministrativeName(description) ? description : "",
+      componentName("locality"),
+      localityFromDetails,
       componentName("province"),
       componentName("area"),
       directName,
@@ -156,8 +174,9 @@ export default function NewCompetitionPage() {
       lng: String(lng),
     });
     const response = await apiFetch<{ city?: string | null }>(`/geocode?${params.toString()}`);
+    const city = normalizeCityName(response.city);
 
-    return normalizeCityName(response.city);
+    return !isAdministrativeName(city) ? city : "";
   };
 
   const resolveCityNameByCoords = async (ymaps: any, lat: number, lng: number, fallback = "") => {

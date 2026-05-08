@@ -110,9 +110,17 @@ class GeocodeController extends Controller
 
         $geo = $members[0]['GeoObject'] ?? [];
         $meta = $geo['metaDataProperty']['GeocoderMetaData'] ?? [];
+        $city = $this->extractLocality($meta, $geo);
+
+        if ($this->isAdministrativeName($city)) {
+            $fallback = $this->requestNominatimReverse($lat, $lng);
+            if ($fallback && !$this->isAdministrativeName($fallback['city'] ?? null)) {
+                return response()->json($fallback);
+            }
+        }
 
         return response()->json([
-            'city' => $this->extractLocality($meta, $geo),
+            'city' => $city,
             'address' => $meta['text'] ?? $geo['name'] ?? null,
             'name' => $geo['name'] ?? null,
             'latitude' => $lat,
@@ -177,9 +185,9 @@ class GeocodeController extends Controller
             $address['hamlet'] ?? null,
             $address['isolated_dwelling'] ?? null,
             $address['locality'] ?? null,
+            $this->specificNameFromAddressText($data['display_name'] ?? null),
             $address['town'] ?? null,
             $address['city'] ?? null,
-            $this->specificNameFromDisplayName($data['display_name'] ?? null),
             $address['municipality'] ?? null,
             $address['county'] ?? null,
         ]);
@@ -214,13 +222,17 @@ class GeocodeController extends Controller
         $adminArea = $country['AdministrativeArea'] ?? [];
         $subArea = $adminArea['SubAdministrativeArea'] ?? [];
         $geoName = $geo['name'] ?? null;
-
-        $specific = $this->firstNonEmpty([
+        $localityCandidates = [
             $componentName('locality'),
             $adminArea['Locality']['LocalityName'] ?? null,
             $subArea['Locality']['LocalityName'] ?? null,
             $subArea['DependentLocality']['DependentLocalityName'] ?? null,
             $adminArea['DependentLocality']['DependentLocalityName'] ?? null,
+        ];
+
+        $specific = $this->firstNonEmpty([
+            ...array_filter($localityCandidates, fn ($name) => !$this->isAdministrativeName($name)),
+            $this->specificNameFromAddressText($meta['text'] ?? null),
             !$this->isAdministrativeName($geoName) ? $geoName : null,
         ]);
 
@@ -229,6 +241,7 @@ class GeocodeController extends Controller
         }
 
         return $this->firstNonEmpty([
+            ...$localityCandidates,
             $componentName('province'),
             $componentName('area'),
             $geoName,
@@ -257,15 +270,22 @@ class GeocodeController extends Controller
         return null;
     }
 
-    private function specificNameFromDisplayName(?string $displayName): ?string
+    private function specificNameFromAddressText(?string $addressText): ?string
     {
-        if (!$displayName) {
+        if (!$addressText) {
             return null;
         }
 
-        $firstPart = trim(explode(',', $displayName, 2)[0] ?? '');
+        $parts = array_reverse(array_map('trim', explode(',', $addressText)));
+        foreach ($parts as $part) {
+            if ($part === '' || $this->isAdministrativeName($part) || $this->isBroadRegionName($part)) {
+                continue;
+            }
 
-        return !$this->isAdministrativeName($firstPart) ? $firstPart : null;
+            return $this->normalizeSettlementName($part);
+        }
+
+        return null;
     }
 
     private function isAdministrativeName(?string $name): bool
@@ -275,5 +295,15 @@ class GeocodeController extends Controller
         }
 
         return (bool) preg_match('/(округ|район|область|край|республика|муниципал)/ui', $name);
+    }
+
+    private function isBroadRegionName(string $name): bool
+    {
+        return (bool) preg_match('/^(россия|рф|russia|москва|санкт-петербург)$/ui', trim($name));
+    }
+
+    private function normalizeSettlementName(string $name): string
+    {
+        return trim(preg_replace('/^(село|деревня|пос[её]лок|пос\.|пгт|город|г\.|хутор|станица)\s+/ui', '', $name) ?? $name);
     }
 }
