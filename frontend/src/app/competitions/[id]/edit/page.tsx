@@ -88,6 +88,9 @@ export default function EditCompetitionPage() {
   const isAdministrativeName = (value: unknown) =>
     /(округ|район|область|край|республика|муниципал)/i.test(normalizeCityName(value));
 
+  const isStreetOrHouseName = (value: unknown) =>
+    /(^\d+[а-яa-z]?([/-]\d+[а-яa-z]?)?$|улица|ул\.|проспект|пр-кт|переулок|пер\.|проезд|шоссе|бульвар|набережная|площадь|тупик|аллея|линия|квартал|микрорайон|дом|д\.|строение|стр\.|корпус|к\.|владение|road|street|avenue|lane|drive|highway)/i.test(normalizeCityName(value));
+
   const displayNameFirstPart = (value: unknown) => {
     const normalized = normalizeCityName(value);
     if (!normalized) return "";
@@ -106,6 +109,7 @@ export default function EditCompetitionPage() {
     const settlement = parts.find((part) => (
       part &&
       !postalCodeOrNumber.test(part) &&
+      !isStreetOrHouseName(part) &&
       !isAdministrativeName(part) &&
       !broadNames.test(part)
     ));
@@ -150,11 +154,11 @@ export default function EditCompetitionPage() {
       preciseLocality,
       specificNameFromAddressText(addressLine),
       specificNameFromAddressText(text),
-      !isAdministrativeName(directName) ? directName : "",
+      !isAdministrativeName(directName) && !isStreetOrHouseName(directName) ? directName : "",
       displayNameFirstPart(addressLine),
       displayNameFirstPart(text),
       !isAdministrativeName(administrativeAreas?.[0]) ? administrativeAreas?.[0] : "",
-      !isAdministrativeName(description) ? description : "",
+      !isAdministrativeName(description) && !isStreetOrHouseName(description) ? description : "",
       componentName("locality"),
       localityFromDetails,
       componentName("province"),

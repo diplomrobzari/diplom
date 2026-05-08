@@ -292,6 +292,7 @@ class GeocodeController extends Controller
             if (
                 $part === ''
                 || $this->isPostalCodeOrNumber($part)
+                || $this->isStreetOrHouseName($part)
                 || $this->isAdministrativeName($part)
                 || $this->isBroadRegionName($part)
             ) {
@@ -321,6 +322,11 @@ class GeocodeController extends Controller
     private function isPostalCodeOrNumber(string $name): bool
     {
         return (bool) preg_match('/^\d{3,}(-\d+)?$/u', trim($name));
+    }
+
+    private function isStreetOrHouseName(string $name): bool
+    {
+        return (bool) preg_match('/(^\d+[а-яa-z]?([\/-]\d+[а-яa-z]?)?$|улица|ул\.|проспект|пр-кт|переулок|пер\.|проезд|шоссе|бульвар|набережная|площадь|тупик|аллея|линия|квартал|микрорайон|дом|д\.|строение|стр\.|корпус|к\.|владение|road|street|avenue|lane|drive|highway)/ui', trim($name));
     }
 
     private function normalizeSettlementName(string $name): string
