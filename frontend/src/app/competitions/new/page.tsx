@@ -105,8 +105,14 @@ export default function NewCompetitionPage() {
     if (!normalized) return "";
 
     const broadNames = /^(россия|рф|russia|москва|санкт-петербург)$/i;
+    const postalCodeOrNumber = /^\d{3,}(-\d+)?$/;
     const parts = normalized.split(",").map((part) => part.trim()).reverse();
-    const settlement = parts.find((part) => part && !isAdministrativeName(part) && !broadNames.test(part));
+    const settlement = parts.find((part) => (
+      part &&
+      !postalCodeOrNumber.test(part) &&
+      !isAdministrativeName(part) &&
+      !broadNames.test(part)
+    ));
 
     return settlement?.replace(/^(село|деревня|пос[её]лок|пос\.|пгт|город|г\.|хутор|станица)\s+/i, "").trim() || "";
   };

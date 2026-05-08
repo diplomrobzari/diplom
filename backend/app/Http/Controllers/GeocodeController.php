@@ -289,7 +289,12 @@ class GeocodeController extends Controller
 
         $parts = array_reverse(array_map('trim', explode(',', $addressText)));
         foreach ($parts as $part) {
-            if ($part === '' || $this->isAdministrativeName($part) || $this->isBroadRegionName($part)) {
+            if (
+                $part === ''
+                || $this->isPostalCodeOrNumber($part)
+                || $this->isAdministrativeName($part)
+                || $this->isBroadRegionName($part)
+            ) {
                 continue;
             }
 
@@ -311,6 +316,11 @@ class GeocodeController extends Controller
     private function isBroadRegionName(string $name): bool
     {
         return (bool) preg_match('/^(россия|рф|russia|москва|санкт-петербург)$/ui', trim($name));
+    }
+
+    private function isPostalCodeOrNumber(string $name): bool
+    {
+        return (bool) preg_match('/^\d{3,}(-\d+)?$/u', trim($name));
     }
 
     private function normalizeSettlementName(string $name): string
