@@ -124,8 +124,8 @@ export default function NotificationsPage() {
 
     setDeletingSelected(true);
     try {
-      await apiFetch("/notifications", {
-        method: "DELETE",
+      await apiFetch("/notifications/delete-selected", {
+        method: "POST",
         token,
         body: { ids: selectedIds },
       });
