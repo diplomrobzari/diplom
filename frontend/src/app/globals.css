@@ -232,6 +232,15 @@ body {
   }
 }
 
+.btn-compact {
+  padding: 10px 12px;
+  font-size: 0.72rem;
+  letter-spacing: 0.025em;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+
 .card-dark {
   background: var(--color-dark);
   border-radius: 20px;

@@ -201,7 +201,7 @@ export default function AdminReviewPage() {
                     <Link
                       href={`/competitions/${comp.id}`}
                       target="_blank"
-                      className="btn-secondary inline-flex h-[52px] items-center justify-center px-4 py-2 text-center text-sm"
+                      className="btn-secondary btn-compact inline-flex h-[52px] items-center justify-center text-center"
                     >
                       Просмотр
                     </Link>
@@ -211,7 +211,7 @@ export default function AdminReviewPage() {
                         <button
                           onClick={() => handleApprove(comp.id)}
                           disabled={processing === comp.id}
-                          className="btn-primary inline-flex h-[52px] items-center justify-center px-4 py-2 text-sm"
+                          className="btn-primary btn-compact inline-flex h-[52px] items-center justify-center"
                         >
                           {processing === comp.id ? "..." : "Одобрить"}
                         </button>
@@ -221,14 +221,14 @@ export default function AdminReviewPage() {
                             setRevisionComment(comp.moderation_comment || "");
                           }}
                           disabled={processing === comp.id}
-                          className="btn-secondary inline-flex h-[52px] items-center justify-center whitespace-nowrap px-4 py-2 text-sm"
+                          className="btn-secondary btn-compact inline-flex h-[52px] items-center justify-center"
                         >
                           На доработку
                         </button>
                         <button
                           onClick={() => handleDelete(comp.id)}
                           disabled={processing === comp.id}
-                          className="btn-danger inline-flex h-[52px] items-center justify-center px-4 py-2 text-sm"
+                          className="btn-danger btn-compact inline-flex h-[52px] items-center justify-center"
                         >
                           Удалить
                         </button>
@@ -237,7 +237,7 @@ export default function AdminReviewPage() {
                       <button
                         onClick={() => handleDelete(comp.id)}
                         disabled={processing === comp.id}
-                        className="btn-danger inline-flex h-[52px] items-center justify-center px-4 py-2 text-sm"
+                        className="btn-danger btn-compact inline-flex h-[52px] items-center justify-center"
                       >
                         Удалить
                       </button>
