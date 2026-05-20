@@ -1,0 +1,1025 @@
+@@h1 2 РАЗРАБОТКА ВЕБ-ПРИЛОЖЕНИЯ
+@@h2 2.1 Постановка задачи
+@@p Разрабатываемая веб-платформа «НаСтарте» предназначена для организации и проведения любительских соревнований, конкурсов, творческих мероприятий и локальных состязаний. В отличие от ранней версии проекта, текущая реализация рассматривается не только как каталог объявлений, а как полноценная информационная система с личными кабинетами, модерацией, уведомлениями, рейтингом участников, отзывами об организаторах и административным управлением справочниками.
+@@p Основная задача проекта состоит в создании единой цифровой среды, в которой пользователь может найти интересующее соревнование, записаться на участие, получать уведомления о важных изменениях, просматривать результаты и оставлять отзыв после завершения. Организатор должен иметь возможность создать объявление, указать место проведения на карте, отправить материал на модерацию, управлять списком участников, фиксировать явку и заносить итоговые результаты. Администратор контролирует качество публикуемых объявлений, управляет пользователями, категориями, тегами и элементами кастомизации профиля.
+@@p В проекте выделяются четыре основные роли пользователей: гость, зарегистрированный пользователь, организатор и администратор. Гость может просматривать публичные страницы сайта, знакомиться с объявлениями, рейтингом и профилями пользователей. Зарегистрированный пользователь получает доступ к личному кабинету, уведомлениям, записи на соревнования, управлению профилем, двухфакторной защите и кастомизации оформления. Организатором становится любой пользователь, который создает объявление о соревновании. Администратор выполняет функции модератора и сопровождает работу справочников.
+@@p Для текущей версии платформы были определены следующие функциональные требования:
+@@b каталог соревнований с поиском, фильтрами по городу, категории, тегам, датам и статусам;
+@@b карточка соревнования с описанием, датой, адресом, координатами, списком участников и текущим статусом;
+@@b создание и редактирование объявлений с валидацией формы, выбором категории, тегов и точки на карте;
+@@b обязательная модерация объявлений перед публикацией и повторная модерация после изменения опубликованного объявления;
+@@b сохранение записей участников при повторной модерации опубликованного объявления;
+@@b запись и отмена участия, архив участий, восстановление скрытых записей;
+@@b внесение результатов, отметка неявки и дисквалификации, завершение соревнования;
+@@b отзывы участников об организаторе и ответы организатора на отзывы;
+@@b система достижений, рейтинг пользователей и кастомизация профиля;
+@@b уведомления внутри сайта и дублирование важных событий на электронную почту;
+@@b административная панель для проверки объявлений, управления пользователями, категориями, тегами, статистикой и декоративными элементами профиля;
+@@b защита учетных записей через Laravel Sanctum, двухфакторную аутентификацию, ограничение неудачных попыток входа и проверку прав доступа на сервере.
+@@p Нефункциональные требования включают адаптивность интерфейса, корректную работу на мобильных и настольных устройствах, устойчивость к некорректному вводу, защиту от несанкционированного доступа к административным действиям, поддержку расширения предметной области за счет новых категорий и тегов, а также возможность развертывания проекта на VPS-сервере.
+@@p Архитектурно система построена как клиент-серверное веб-приложение. Клиентская часть реализована на Next.js и отвечает за отображение страниц, маршрутизацию, работу форм и обращение к API. Серверная часть разработана на Laravel и предоставляет REST API, выполняет валидацию, авторизацию, работу с базой данных и отправку уведомлений. Хранение данных организовано в MySQL, а статические файлы профилей и кастомизации выдаются через защищенные маршруты API.
+@@p Для уточнения состава страниц и взаимосвязей между разделами сайта была подготовлена структура веб-приложения (см. Рисунок 7). Она показывает, что центральными разделами являются главная страница, каталог объявлений, создание объявления, профиль, уведомления, рейтинг и административная панель. Через футер доступны контакты, правила и информация о почтовых уведомлениях.
+@@figure|F:\диплом\диаграммы\site-structure.png|Рисунок 7 - Структура сайта «НаСтарте»
+@@p Структура сайта отражает практическое разделение интерфейса на публичную часть, личный кабинет и административную область. Такое разделение упрощает навигацию: пользователь сначала попадает в каталог и карточки объявлений, затем после входа получает доступ к действиям участия, а администратор переходит к отдельным рабочим страницам без смешения с обычными пользовательскими сценариями.
+@@p Диаграмма вариантов использования была дополнена с учетом фактической реализации текущей версии сайта (см. Рисунок 8). В ней отражены не только базовые действия просмотра и регистрации, но и сценарии управления уведомлениями, архивом участий, отзывами, результатами, повторной модерацией, справочниками и кастомизацией. Это важно, поскольку старая версия записки описывала систему значительно уже и не учитывала часть реализованных возможностей.
+@@figure|F:\диплом\диаграммы\use-case-final-clean-admin-fixed.png|Рисунок 8 - Диаграмма вариантов использования веб-платформы «НаСтарте»
+@@p Из диаграммы видно, что обычные сплошные линии отражают участие акторов в вариантах использования, а направленные пунктирные связи применяются для зависимостей include и extend. Для связей актор - вариант использования в UML обычно применяются ассоциации без стрелок, так как они показывают факт взаимодействия, а не направление передачи управления. Направление имеет смысл для зависимостей между самими вариантами использования, поэтому в диаграмме стрелки оставлены именно на include и extend.
+@@p Для описания бизнес-процесса создания и прохождения объявления через систему используется диаграмма деятельности (см. Рисунок 9). Она показывает полный путь от входа организатора и заполнения формы до модерации администратором, публикации, записи участников, завершения соревнования и начисления результатов. Отдельная ветвь отображает доработку объявления: если администратор возвращает материал с комментарием, организатор исправляет данные и повторно отправляет объявление на проверку.
+@@figure|F:\диплом\диаграммы\Детяельности.drawio (1).png|Рисунок 9 - Диаграмма деятельности процесса создания и проведения соревнования
+@@p Диаграмма деятельности важна для проектирования проверок статусов. В системе нельзя сразу опубликовать объявление без проверки администратора, нельзя редактировать завершенное соревнование как обычное объявление, нельзя записаться на мероприятие после окончания и нельзя оставить отзыв до завершения. Эти ограничения реализуются не только в интерфейсе, но и в серверных контроллерах, что исключает обход правил через прямой запрос к API.
+@@p Диаграмма последовательности детализирует сценарий редактирования опубликованного объявления (см. Рисунок 10). Организатор открывает форму, клиент запрашивает данные у Laravel API, сервер получает сведения из базы данных и возвращает JSON для формы. После сохранения изменений API переводит объявление в статус pending_review, сохраняет участников и отправляет уведомление администраторам о повторной модерации. Такой сценарий был добавлен в текущую версию проекта для защиты участников от неконтролируемого изменения условий соревнования.
+@@figure|F:\диплом\диаграммы\sequence-final.png|Рисунок 10 - Диаграмма последовательности повторной модерации объявления
+@@p На основании постановки задачи была выбрана следующая логика жизненного цикла объявления: pending_review - ожидание проверки, needs_revision - требуется доработка, recruiting - открыт набор участников, upcoming - мероприятие скоро начнется, live - соревнование проводится сейчас, finished - соревнование завершено, closed - набор участников закрыт из-за отсутствия свободных мест. Переводы между статусами выполняются автоматически по датам и количеству мест либо вручную администратором и организатором в разрешенных точках процесса.
+@@p Таким образом, постановка задачи включает не только разработку страниц сайта, но и формализацию ролей, жизненного цикла соревнования, правил доступа, уведомлений и сценариев сопровождения. Это позволяет рассматривать проект как законченную веб-платформу, пригодную для практического использования и дальнейшего развития.
+@@h2 2.2 Проектирование базы данных
+@@p Проектирование базы данных выполнялось с учетом того, что в системе присутствуют долговременные сущности: пользователи, соревнования, заявки на участие, отзывы, уведомления, справочники, достижения и элементы оформления профиля. В качестве СУБД используется MySQL, так как она хорошо поддерживается Laravel, обеспечивает внешние ключи, индексы, транзакции и совместима с типовой конфигурацией VPS-хостинга.
+@@p Центральными сущностями являются users и competitions. Таблица users хранит учетные записи и настройки профиля, а таблица competitions хранит объявления о соревнованиях. Связь между ними строится через поле user_id, которое указывает создателя объявления. Отдельная роль организатора не хранится в базе, поскольку пользователь становится организатором, когда создает соревнование. Такой подход упрощает модель данных и соответствует логике сайта.
+@@p Таблица participations связывает пользователя и соревнование. Она содержит статус участия, место, баллы и примечание к результату. Для пары user_id и competition_id задано уникальное ограничение, поэтому пользователь не может создать несколько одинаковых заявок на одно соревнование. При отмене участия запись переводится в другое состояние или мягко удаляется, что позволяет вести архив и восстанавливать данные без потери истории.
+@@p Категории и теги вынесены в отдельные справочники. Категория задает крупный тип соревнования, а теги позволяют уточнить формат, сложность или тематику. Между competitions и tags используется промежуточная таблица competition_tag, реализующая связь многие ко многим. Благодаря этому одно соревнование может иметь несколько тегов, а один тег может использоваться в большом количестве объявлений.
+@@table|Таблица 1 - Основные сущности базы данных
+Сущность|Назначение|Ключевые данные
+users|Хранение учетных записей и профилей пользователей|ФИО, email, username, пароль, город, роль администратора, блокировка, аватар, 2FA, кастомизация
+competitions|Хранение объявлений о соревнованиях|Название, описание, город, адрес, координаты, даты, лимит мест, статус, модерационный комментарий
+participations|Связь пользователя с соревнованием|Статус участия, место, баллы, отметка неявки или дисквалификации, архивирование
+categories|Справочник основных категорий|Название и slug категории для фильтрации каталога
+tags|Справочник тегов|Название и slug тега для расширенного поиска
+competition_tag|Промежуточная таблица связи многие ко многим|Идентификаторы соревнования и тега
+organizer_reviews|Отзывы участников об организаторах|Оценка, текст отзыва, ответ организатора, автор и соревнование
+user_notifications|Уведомления внутри сайта|Тип события, заголовок, текст, дополнительные данные, признак прочтения
+achievements и user_achievements|Система достижений и прогресса|Код достижения, название, условие выдачи, связь с пользователем
+profile_customizations|Элементы оформления профиля|Тип элемента, файл, требуемое количество выполненных задач
+competition_reminders|Напоминания о скором начале|Соревнование, пользователь, тип напоминания, время отправки
+@@endtable
+@@p Для таблицы competitions предусмотрены поля title, description, city, address, latitude, longitude, starts_at, ends_at, max_participants, current_participants, status, approved_at и moderation_comment. Поля latitude и longitude нужны для отображения места проведения на карте. Поля status и moderation_comment используются для процесса модерации, а approved_at фиксирует момент публикации объявления.
+@@p Важным решением стало сохранение текущего количества участников в поле current_participants. Это позволяет быстро отображать количество занятых мест в карточке соревнования, не выполняя каждый раз тяжелый подсчет по таблице participations. При записи и отмене участия значение обновляется в контроллере, а уникальное ограничение не дает пользователю случайно записаться повторно.
+@@p Для поддержки отзывов используется таблица organizer_reviews. Она связывает автора отзыва, организатора и соревнование. Ограничение уникальности по соревнованию и автору позволяет одному участнику оставить только один отзыв по конкретному соревнованию. Если пользователь хочет изменить текст или оценку, обновляется существующая запись. Организатор может добавить ответ, который сохраняется в той же сущности.
+@@p Таблица user_notifications хранит уведомления, которые видит пользователь на сайте. В поле data сохраняется дополнительная информация в формате JSON: идентификатор соревнования, статус, комментарий модератора или идентификатор связанного пользователя. Такой формат удобен, потому что разные типы уведомлений требуют разного набора служебных данных, а структура таблицы остается стабильной.
+@@p Логическая модель базы данных представлена на ER-диаграмме (см. Рисунок 11). На ней отражены основные таблицы проекта, первичные и внешние ключи, а также связи между пользователями, соревнованиями, участиями, отзывами, уведомлениями, достижениями, тегами, категориями и элементами кастомизации профиля.
+@@figure|F:\диплом\диаграммы\er диаграмма.png|Рисунок 11 - ER-диаграмма базы данных веб-платформы «НаСтарте»
+@@p При проектировании учитывалась производительность часто используемых запросов. Индексы добавлены для статусов соревнований, дат начала, связей участия, даты создания уведомлений и административной статистики. Это особенно важно для страниц каталога, рейтинга, профиля, списка уведомлений и панели администратора, где данные загружаются списками и часто сортируются.
+@@p Логика статусов соревнования реализована в модели Competition. Модель хранит список допустимых статусов, связи с создателем, категорией, тегами, участниками и отзывами, а также метод refreshStatus, который автоматически переводит опубликованное объявление в состояния upcoming, live, finished или closed в зависимости от времени и количества мест.
+@@code|Листинг 1 - Модель соревнования и жизненный цикл статусов
+class Competition extends Model
+{
+    use HasFactory, SoftDeletes;
+
+    protected $fillable = [
+        'user_id',
+        'category_id',
+        'category_name',
+        'custom_category',
+        'title',
+        'description',
+        'city',
+        'address',
+        'latitude',
+        'longitude',
+        'starts_at',
+        'ends_at',
+        'max_participants',
+        'current_participants',
+        'status',
+        'is_public',
+        'approved_at',
+        'moderation_comment',
+        'metadata',
+        'tag_names',
+    ];
+
+    protected $casts = [
+        'starts_at' => 'datetime',
+        'ends_at' => 'datetime',
+        'approved_at' => 'datetime',
+        'is_public' => 'boolean',
+        'metadata' => 'array',
+        'tag_names' => 'array',
+    ];
+
+    public const STATUSES = [
+        'pending_review',
+        'needs_revision',
+        'recruiting',
+        'upcoming',
+        'live',
+        'finished',
+        'closed',
+    ];
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    public function tags()
+    {
+        return $this->belongsToMany(Tag::class)->withTimestamps();
+    }
+
+    public function participations()
+    {
+        return $this->hasMany(Participation::class);
+    }
+
+    public function organizerReviews()
+    {
+        return $this->hasMany(OrganizerReview::class);
+    }
+
+    public function scopeFilter($query, array $filters)
+    {
+        return $query
+            ->when($filters['search'] ?? null, fn ($q, $search) =>
+                $q->where('title', 'like', "%{$search}%"))
+            ->when($filters['city'] ?? null, fn ($q, $city) =>
+                $q->where('city', 'like', "%{$city}%"))
+            ->when($filters['status'] ?? null, fn ($q, $status) =>
+                $q->where('status', $status))
+            ->when($filters['date_from'] ?? null, fn ($q, $date) =>
+                $q->whereDate('starts_at', '>=', $date))
+            ->when($filters['date_to'] ?? null, fn ($q, $date) =>
+                $q->whereDate('starts_at', '<=', $date))
+            ->when($filters['category'] ?? null, function ($q, $category) {
+                $q->where(function ($inner) use ($category) {
+                    $inner->whereHas('category', fn ($sub) =>
+                        $sub->where('slug', $category))
+                        ->orWhere('custom_category', 'like', "%{$category}%");
+                });
+            })
+            ->when($filters['tag'] ?? null, fn ($q, $tag) =>
+                $q->whereHas('tags', fn ($sub) => $sub->where('slug', $tag)))
+            ->when($filters['tags'] ?? null, fn ($q, $tags) =>
+                $q->whereHas('tags', fn ($sub) => $sub->whereIn('slug', $tags)));
+    }
+
+    public function refreshStatus(): void
+    {
+        $now = Carbon::now();
+        $previousStatus = $this->status;
+
+        if (in_array($this->status, ['pending_review', 'needs_revision'], true)) {
+            return;
+        }
+
+        if ($this->ends_at && $now->greaterThanOrEqualTo($this->ends_at)) {
+            $this->status = 'finished';
+        } elseif ($now->greaterThanOrEqualTo($this->starts_at)
+            && $now->lessThan($this->ends_at ?? $this->starts_at->copy()->addHours(4))) {
+            $this->status = 'live';
+        } elseif ($this->starts_at->isFuture()
+            && $now->greaterThanOrEqualTo($this->starts_at->copy()->subDay())) {
+            $this->status = 'upcoming';
+        } elseif ($this->starts_at->isFuture()) {
+            $this->status = $this->hasCapacity() ? 'recruiting' : 'closed';
+        }
+
+        if ($this->status !== $previousStatus) {
+            $this->saveQuietly();
+        }
+    }
+
+    public function hasCapacity(): bool
+    {
+        return $this->max_participants === 0
+            || $this->current_participants < $this->max_participants;
+    }
+}
+@@endcode
+@@p База данных проектировалась так, чтобы каждый важный пользовательский сценарий имел явное отражение в структуре хранения. Например, уведомления не являются только временными сообщениями интерфейса, а сохраняются в отдельной таблице. Отзывы не привязаны только к профилю, а связаны с конкретным завершенным соревнованием. Кастомизация профиля не захардкожена в клиентской части, а управляется администратором через справочник.
+@@p Таким образом, структура данных поддерживает все основные функции текущей версии сайта: публикацию и модерацию объявлений, участие пользователей, результаты, отзывы, рейтинг, уведомления, достижения и административное сопровождение.
+@@h2 2.3 Проектирование пользовательского интерфейса
+@@p Пользовательский интерфейс проектировался с учетом того, что сайтом пользуются люди с разным уровнем подготовки. Поэтому основная навигация вынесена в шапку, а наиболее частые действия размещены на страницах рядом с контекстом: запись находится в карточке соревнования, редактирование доступно владельцу объявления, ответы на отзывы расположены на странице отзывов, а административные действия собраны в отдельной панели.
+@@p Главная страница выполняет роль входной точки. На ней размещен слайдер тематик, блок популярных объявлений, рейтинг участников и преимущества платформы. Каталог соревнований является рабочей страницей поиска: пользователь может отфильтровать объявления по городу, категории, тегам и датам, открыть карточку и просмотреть подробности. Карточка соревнования показывает описание, статус, дату, адрес, карту, список участников и доступные действия.
+@@placeholder|[ВСТАВИТЬ СКРИНШОТ: макет главной страницы сайта]|Рисунок 12 - Макет главной страницы
+@@placeholder|[ВСТАВИТЬ СКРИНШОТ: каталог соревнований с фильтрами и карточками]|Рисунок 13 - Страница каталога соревнований
+@@placeholder|[ВСТАВИТЬ СКРИНШОТ: карточка соревнования с описанием, картой и кнопкой записи]|Рисунок 14 - Карточка соревнования
+@@p Форма создания объявления включает поля названия, описания, города, адреса, координат, даты начала и окончания, количества мест, категории и тегов. Для выбора места используется карта и серверный маршрут геокодирования. Если пользователь выбирает точку на карте, координаты и город автоматически попадают в форму, что снижает вероятность ошибки при заполнении.
+@@placeholder|[ВСТАВИТЬ СКРИНШОТ: форма создания объявления с картой и выбором тегов]|Рисунок 15 - Форма создания объявления
+@@p Личный кабинет содержит данные профиля, аватар, список созданных объявлений, участия, отзывы, достижения и настройки оформления. Пользователь может загрузить аватар с кадрированием, включить или отключить двухфакторную аутентификацию, выбрать доступную рамку и фон профиля. Доступность элементов кастомизации зависит от количества выполненных задач и достижений.
+@@placeholder|[ВСТАВИТЬ СКРИНШОТ: личный кабинет пользователя с профилем и достижениями]|Рисунок 16 - Личный кабинет пользователя
+@@p Страница уведомлений показывает события, которые относятся к пользователю: подтверждение записи, изменение объявления, запрос доработки, ответ на отзыв, напоминание о старте соревнования. Непрочитанные уведомления выделяются визуально, а пользователь может отметить одно уведомление или весь список как прочитанный.
+@@placeholder|[ВСТАВИТЬ СКРИНШОТ: список уведомлений пользователя]|Рисунок 17 - Страница уведомлений
+@@p Административная панель разделена на несколько страниц: проверка объявлений, пользователи, категории и теги, статистика, кастомизация. Такое разделение позволяет не перегружать одну страницу большим количеством элементов. В разделе модерации администратор видит объявления в статусе pending_review и может одобрить их либо вернуть на доработку с обязательным комментарием.
+@@placeholder|[ВСТАВИТЬ СКРИНШОТ: административная панель модерации объявлений]|Рисунок 18 - Модерация объявлений в административной панели
+@@placeholder|[ВСТАВИТЬ СКРИНШОТ: страница статистики администратора с графиками]|Рисунок 19 - Статистика администратора
+@@p При проектировании интерфейса использовались следующие принципы:
+@@b действия доступны только тем ролям, которым они действительно разрешены;
+@@b интерфейс не скрывает важные статусы, например ожидание модерации или необходимость доработки;
+@@b ошибки формы показываются рядом с соответствующими полями и дублируются общим сообщением;
+@@b кнопки основных действий имеют понятный текст и расположены рядом с данными, к которым относятся;
+@@b адаптивная верстка сохраняет читаемость карточек, форм, таблиц и административных страниц на мобильных экранах;
+@@b административные функции визуально отделены от пользовательских сценариев.
+@@p Для клиента выбран Next.js, так как он поддерживает компонентный подход, маршрутизацию по файловой структуре, оптимизацию сборки и удобное разделение страниц. В проекте используются компоненты Header, Footer, CompetitionCard, CarouselSlider, StatusBadge, AvatarCropModal и OptimizedImage. Общая функция apiFetch инкапсулирует запросы к Laravel API, добавляет токен авторизации, CSRF-заголовок для небезопасных методов и единообразно обрабатывает ошибки.
+@@code|Листинг 2 - Универсальная функция обращения клиентской части к Laravel API
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  "http://localhost:8000/api";
+
+const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
+const API_REQUEST_TIMEOUT_MS = 20000;
+
+type ApiOptions = {
+  method?: string;
+  token?: string | null;
+  body?: Record<string, unknown> | FormData;
+  cache?: RequestCache;
+};
+
+export async function apiFetch<T>(
+  path: string,
+  { method = "GET", token, body, cache }: ApiOptions = {}
+): Promise<T> {
+  const normalizedMethod = method.toUpperCase();
+  const headers: Record<string, string> = {
+    Accept: "application/json",
+  };
+
+  let payload: BodyInit | undefined;
+  if (body instanceof FormData) {
+    payload = body;
+  } else if (body) {
+    headers["Content-Type"] = "application/json";
+    payload = JSON.stringify(body);
+  }
+
+  const authToken = token !== undefined ? token : getToken();
+  if (authToken) {
+    headers.Authorization = `Bearer ${authToken}`;
+  }
+
+  if (!SAFE_METHODS.has(normalizedMethod)) {
+    const csrfToken = getCookie("XSRF-TOKEN");
+    if (csrfToken) {
+      headers["X-XSRF-TOKEN"] = decodeURIComponent(csrfToken);
+    }
+  }
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), API_REQUEST_TIMEOUT_MS);
+
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE}${path}`, {
+      method: normalizedMethod,
+      headers,
+      body: payload,
+      cache: cache ?? (SAFE_METHODS.has(normalizedMethod) ? "default" : "no-store"),
+      credentials: "include",
+      signal: controller.signal,
+    });
+  } catch (error: unknown) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new Error("Сервер слишком долго отвечает. Попробуйте еще раз.");
+    }
+    throw new Error("Не удалось подключиться к серверу. Проверьте сеть.");
+  } finally {
+    clearTimeout(timeoutId);
+  }
+
+  if (!response.ok) {
+    const text = await response.text();
+    let message = "Ошибка запроса";
+    let errors: Record<string, string[]> | undefined;
+    let twoFactorRequired = false;
+
+    try {
+      const body = JSON.parse(text) as {
+        message?: string;
+        errors?: Record<string, string[]>;
+        two_factor_required?: boolean;
+      };
+
+      if (response.status === 422 && body.errors) {
+        errors = body.errors;
+        const first = Object.values(body.errors)[0]?.[0];
+        message = first || body.message || message;
+      } else if (response.status === 429) {
+        message = "Слишком много попыток. Подождите минуту.";
+      } else if (response.status === 413) {
+        message = "Файл слишком большой. Уменьшите изображение.";
+      } else {
+        message = localizeApiMessage(body.message || message, response.status);
+      }
+
+      twoFactorRequired = body.two_factor_required === true;
+    } catch {
+      message = localizeApiMessage(text || message, response.status);
+    }
+
+    if (response.status === 401 && text.includes("Unauthenticated")) {
+      clearToken();
+    }
+
+    const err = new Error(message) as Error & {
+      errors?: Record<string, string[]>;
+      two_factor_required?: boolean;
+    };
+    err.errors = errors;
+    err.two_factor_required = twoFactorRequired;
+    throw err;
+  }
+
+  return response.json();
+}
+
+export function getToken(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem("nastrarte_token");
+}
+
+export function saveToken(token: string) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem("nastrarte_token", token);
+}
+
+export function clearToken() {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem("nastrarte_token");
+}
+@@endcode
+@@p В листинге показано, что клиентская часть не дублирует настройку запросов на каждой странице. Все страницы используют единый механизм отправки JSON и FormData, а также получают одинаковую обработку ошибок. Это повышает надежность интерфейса: при истекшей сессии токен очищается, при ошибке валидации можно показать конкретное поле, а при превышении времени ожидания пользователь получает понятное сообщение.
+@@p Форма создания объявления является одним из наиболее сложных клиентских сценариев. В ней объединены локальная валидация, загрузка категорий и тегов, работа с картой, подсказки по городу и отправка данных на сервер. Перед отправкой клиент проверяет обязательные поля, допустимый диапазон координат, даты и максимальное число участников. После успешного сохранения объявление не публикуется сразу, а отправляется на модерацию.
+@@code|Листинг 3 - Клиентская логика создания объявления и отправки на модерацию
+type CompetitionForm = {
+  title: string;
+  description: string;
+  city: string;
+  address: string;
+  latitude: string;
+  longitude: string;
+  starts_at: string;
+  ends_at: string;
+  max_participants: number;
+  category_id: string;
+  custom_category: string;
+};
+
+function validateCompetition(form: CompetitionForm): Record<string, string> {
+  const errors: Record<string, string> = {};
+  const trim = (value: string) => String(value || "").trim();
+
+  if (!trim(form.title)) {
+    errors.title = "Обязательное поле";
+  } else if (form.title.length > 255) {
+    errors.title = "Максимум 255 символов";
+  }
+
+  if (form.description && form.description.length > 5000) {
+    errors.description = "Максимум 5000 символов";
+  }
+
+  if (!trim(form.city)) {
+    errors.city = "Укажите город";
+  }
+
+  const latitude = form.latitude ? parseFloat(form.latitude) : NaN;
+  const longitude = form.longitude ? parseFloat(form.longitude) : NaN;
+  if (form.latitude && (Number.isNaN(latitude) || latitude < -90 || latitude > 90)) {
+    errors.latitude = "Широта должна быть от -90 до 90";
+  }
+  if (form.longitude && (Number.isNaN(longitude) || longitude < -180 || longitude > 180)) {
+    errors.longitude = "Долгота должна быть от -180 до 180";
+  }
+
+  if (!trim(form.starts_at)) {
+    errors.starts_at = "Укажите дату начала";
+  } else if (new Date(form.starts_at).getTime() < Date.now() - 60000) {
+    errors.starts_at = "Дата начала должна быть в будущем";
+  }
+
+  if (form.ends_at) {
+    const start = new Date(form.starts_at).getTime();
+    const end = new Date(form.ends_at).getTime();
+    if (end <= start) {
+      errors.ends_at = "Дата окончания должна быть после начала";
+    }
+  }
+
+  if (Number(form.max_participants) <= 0) {
+    errors.max_participants = "Количество мест должно быть больше 0";
+  } else if (Number(form.max_participants) > 100) {
+    errors.max_participants = "Количество мест не может быть больше 100";
+  }
+
+  return errors;
+}
+
+async function submitCompetition(
+  form: CompetitionForm,
+  selectedTags: string[],
+  token: string | null
+) {
+  const fieldErrors = validateCompetition(form);
+  if (Object.keys(fieldErrors).length > 0) {
+    return { ok: false, fieldErrors };
+  }
+
+  const payload = {
+    ...form,
+    category_id: form.category_id ? Number(form.category_id) : null,
+    max_participants: Number(form.max_participants),
+    latitude: form.latitude ? Number(form.latitude) : null,
+    longitude: form.longitude ? Number(form.longitude) : null,
+    tags: selectedTags,
+  };
+
+  const competition = await apiFetch<Competition>("/competitions", {
+    method: "POST",
+    token,
+    body: payload,
+  });
+
+  return {
+    ok: true,
+    competition,
+    message: "Объявление отправлено на модерацию",
+  };
+}
+
+function applyMapPoint(lat: number, lng: number, city = "") {
+  setForm((previous) => ({
+    ...previous,
+    city: city.trim() || previous.city,
+    latitude: String(lat),
+    longitude: String(lng),
+  }));
+
+  if (city.trim()) {
+    setFieldErrors((previous) => ({ ...previous, city: "" }));
+    setShowSuggestions(false);
+    setCitySuggestions([]);
+  }
+}
+@@endcode
+@@p В пользовательском интерфейсе особое внимание уделено состояниям. Карточка объявления показывает не только дату и город, но и статус: набор участников, скоро начнется, идет сейчас, завершено, набор закрыт, ожидает модерации или отправлено на доработку. Для владельца объявления и администратора доступны дополнительные кнопки, но они не выводятся обычному пользователю.
+@@p Такой подход делает интерфейс предсказуемым: пользователь видит только доступные действия, но сервер все равно повторно проверяет права. Это важно, потому что скрытие кнопки в интерфейсе не является полноценной защитой. Защита реализована в Laravel-контроллерах, а интерфейс только помогает не предлагать пользователю недопустимые действия.
+@@h2 2.4 Разработка кода страниц
+@@p Разработка кода выполнялась с разделением проекта на две части: frontend и backend. В каталоге frontend находится приложение Next.js, отвечающее за страницы и компоненты интерфейса. В каталоге backend находится Laravel API, отвечающий за бизнес-логику, маршруты, контроллеры, модели, миграции, сервис уведомлений и планировщик. Такое разделение делает проект удобным для сопровождения и позволяет независимо разворачивать клиентскую и серверную части.
+@@h3 2.4.1 Разработка клиентской части
+@@p Клиентская часть использует маршрутизацию Next.js App Router. Основные страницы расположены в каталоге src/app: главная страница, вход, регистрация, список соревнований, создание и редактирование объявления, карточка соревнования, профиль, отзывы, уведомления, рейтинг пользователей и административные разделы. Компоненты общего назначения вынесены в src/components, а работа с API и изображениями - в src/lib.
+@@p Страница каталога соревнований загружает список объявлений через endpoint GET /api/competitions. Параметры фильтрации передаются в query string: search, city, status, date_from, date_to, category, tag, tags, sort и per_page. Ответ сервера содержит пагинированный список, поэтому интерфейс может постепенно загружать данные и не перегружает страницу большим количеством карточек.
+@@p Страница конкретного соревнования показывает подробную информацию и определяет набор действий по роли текущего пользователя. Участник может записаться или отменить участие, организатор может редактировать объявление, управлять участниками и занести результаты, администратор может одобрить объявление или отправить его на доработку. В завершенных соревнованиях участнику доступно оставление отзыва.
+@@p В профиле пользователь видит личные данные, созданные объявления, участия, достижения и отзывы. Для аватара используется отдельное модальное окно кадрирования. Изображение отправляется на сервер как FormData, а итоговая ссылка выдается через API-маршрут /avatars, что позволяет корректно работать даже без прямой публикации storage-каталога.
+@@p Административные страницы на клиенте используют те же API-механизмы, но дополнительно проверяют роль пользователя. Если пользователь не является администратором, сервер вернет ошибку доступа, а интерфейс не позволит выполнить действие. В разделе статистики отображаются агрегированные данные по пользователям, объявлениям, участиям, статусам, категориям и тегам.
+@@h3 2.4.2 Разработка серверной части
+@@p Серверная часть реализована на Laravel и построена вокруг REST API. Маршруты сгруппированы в routes/api.php. Публичные маршруты доступны без авторизации: просмотр категорий, тегов, каталога соревнований, карточки соревнования, публичных профилей и рейтинга. Остальные маршруты защищены middleware auth:sanctum и требуют действующий токен пользователя.
+@@p Для авторизации используется Laravel Sanctum. После успешного входа сервер выдает токен, который клиент сохраняет в localStorage и передает в заголовке Authorization. При выходе токен удаляется на сервере и очищается на клиенте. Для административных действий дополнительно проверяется признак is_admin в модели пользователя.
+@@p В серверной части реализованы контроллеры AuthController, PasswordResetController, CompetitionController, ProfileController, AdminController, NotificationController, ParticipationController и GeocodeController. Такая декомпозиция позволяет держать связанные сценарии в отдельных классах и не смешивать логику профиля, объявлений, уведомлений и администрирования.
+@@code|Листинг 4 - Основные маршруты REST API веб-платформы
+Route::get('/health', fn () => ['status' => 'ok']);
+
+Route::post('/auth/register', [AuthController::class, 'register']);
+Route::post('/auth/login', [AuthController::class, 'login']);
+Route::post('/auth/password/reset/send', [PasswordResetController::class, 'sendResetCode']);
+Route::post('/auth/password/reset', [PasswordResetController::class, 'resetPassword']);
+
+Route::get('/categories', fn () => Category::all());
+Route::get('/tags', fn () => Tag::all());
+Route::get('/geocode', [GeocodeController::class, 'search']);
+Route::get('/competitions', [CompetitionController::class, 'index']);
+Route::get('/users/top', [ProfileController::class, 'top']);
+Route::get('/users/{user}/reviews', [ProfileController::class, 'showUserReviews']);
+Route::get('/users/{user}', [ProfileController::class, 'showUser']);
+Route::get('/avatars/{path}', [ProfileController::class, 'avatar'])->where('path', '.*');
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/auth/me', [AuthController::class, 'me']);
+    Route::post('/auth/logout', [AuthController::class, 'logout']);
+
+    Route::get('/competitions/pending', [CompetitionController::class, 'pending']);
+    Route::post('/competitions', [CompetitionController::class, 'store']);
+    Route::put('/competitions/{competition}', [CompetitionController::class, 'update']);
+    Route::post('/competitions/{competition}/approve', [CompetitionController::class, 'approve']);
+    Route::post('/competitions/{competition}/request-revision', [CompetitionController::class, 'requestRevision']);
+    Route::post('/competitions/{competition}/submit-for-review', [CompetitionController::class, 'submitForReview']);
+    Route::delete('/competitions/{competition}', [CompetitionController::class, 'destroy']);
+    Route::post('/competitions/{competition}/restore', [CompetitionController::class, 'restore']);
+    Route::get('/competitions/archived', [CompetitionController::class, 'archived']);
+
+    Route::post('/competitions/{competition}/register', [CompetitionController::class, 'register']);
+    Route::post('/competitions/{competition}/unregister', [CompetitionController::class, 'unregister']);
+    Route::delete('/competitions/{competition}/participants/{userId}', [CompetitionController::class, 'removeParticipant']);
+    Route::post('/competitions/{competition}/participants/{userId}/no-show', [CompetitionController::class, 'markNoShow']);
+    Route::post('/competitions/{competition}/results', [CompetitionController::class, 'results']);
+    Route::post('/competitions/{competition}/finish', [CompetitionController::class, 'finish']);
+    Route::post('/competitions/{competition}/review', [CompetitionController::class, 'storeReview']);
+
+    Route::get('/profile', [ProfileController::class, 'show']);
+    Route::get('/profile/reviews', [ProfileController::class, 'reviews']);
+    Route::post('/profile/reviews/{review}/reply', [ProfileController::class, 'replyToReview']);
+    Route::put('/profile', [ProfileController::class, 'update']);
+    Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar']);
+    Route::get('/profile/customization-options', [ProfileController::class, 'customizationOptions']);
+    Route::put('/profile/customization', [ProfileController::class, 'updateCustomization']);
+    Route::post('/profile/two-factor/enable', [ProfileController::class, 'enableTwoFactor']);
+    Route::post('/profile/two-factor/disable', [ProfileController::class, 'disableTwoFactor']);
+
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead']);
+    Route::post('/notifications/{notification}/read', [NotificationController::class, 'markRead']);
+
+    Route::get('/participations/archived', [ParticipationController::class, 'archived']);
+    Route::delete('/participations/{participation}', [ParticipationController::class, 'destroy']);
+    Route::post('/participations/{participation}/restore', [ParticipationController::class, 'restore']);
+
+    Route::get('/admin/stats', [AdminController::class, 'stats']);
+    Route::get('/admin/users', [AdminController::class, 'users']);
+    Route::post('/admin/users/{user}/ban', [AdminController::class, 'banUser']);
+    Route::post('/admin/users/{user}/unban', [AdminController::class, 'unbanUser']);
+    Route::post('/admin/users/{user}/promote', [AdminController::class, 'promoteUser']);
+    Route::post('/admin/tags', [AdminController::class, 'storeTag']);
+    Route::put('/admin/tags/{tag}', [AdminController::class, 'updateTag']);
+    Route::delete('/admin/tags/{tag}', [AdminController::class, 'destroyTag']);
+    Route::post('/admin/categories', [AdminController::class, 'storeCategory']);
+    Route::put('/admin/categories/{category}', [AdminController::class, 'updateCategory']);
+    Route::delete('/admin/categories/{category}', [AdminController::class, 'destroyCategory']);
+    Route::get('/admin/customizations', [AdminController::class, 'customizations']);
+    Route::post('/admin/customizations', [AdminController::class, 'storeCustomization']);
+    Route::put('/admin/customizations/{customization}', [AdminController::class, 'updateCustomization']);
+    Route::delete('/admin/customizations/{customization}', [AdminController::class, 'destroyCustomization']);
+});
+
+Route::get('/competitions/{competition}', [CompetitionController::class, 'show']);
+Route::get('/competitions/{competition}/participants', [CompetitionController::class, 'participants']);
+@@endcode
+@@p Важной частью серверной логики является создание и редактирование объявлений. При создании объявление всегда получает статус pending_review. Это исключает ситуацию, когда непроверенный материал сразу попадает в общий каталог. После сохранения сервер отправляет уведомление администраторам. Если организатор редактирует уже опубликованное объявление, оно снова уходит на модерацию, но список участников не очищается.
+@@code|Листинг 5 - Создание и повторная модерация объявления в CompetitionController
+public function store(Request $request)
+{
+    $data = $request->validate([
+        'title' => ['required', 'string', 'max:255'],
+        'description' => ['nullable', 'string'],
+        'city' => ['required', 'string', 'max:255'],
+        'address' => ['nullable', 'string', 'max:500'],
+        'latitude' => ['nullable', 'numeric', 'between:-90,90'],
+        'longitude' => ['nullable', 'numeric', 'between:-180,180'],
+        'starts_at' => ['required', 'date'],
+        'ends_at' => ['nullable', 'date', 'after:starts_at'],
+        'max_participants' => ['required', 'integer', 'min:1', 'max:100'],
+        'category_id' => ['nullable', 'exists:categories,id'],
+        'category_name' => ['nullable', 'string', 'max:255'],
+        'custom_category' => ['nullable', 'string', 'max:255'],
+        'tags' => ['array'],
+        'tags.*' => ['string', 'max:50'],
+        'tag_names' => ['nullable', 'array'],
+        'tag_names.*' => ['string', 'max:50'],
+    ]);
+
+    $competition = Competition::create([
+        'user_id' => $request->user()->id,
+        'title' => $data['title'],
+        'description' => $data['description'] ?? null,
+        'city' => $data['city'],
+        'address' => $data['address'] ?? null,
+        'latitude' => $data['latitude'] ?? null,
+        'longitude' => $data['longitude'] ?? null,
+        'starts_at' => new Carbon($data['starts_at']),
+        'ends_at' => isset($data['ends_at']) ? new Carbon($data['ends_at']) : null,
+        'max_participants' => $data['max_participants'],
+        'category_id' => $data['category_id'] ?? null,
+        'category_name' => $data['category_name'] ?? null,
+        'custom_category' => $data['custom_category'] ?? null,
+        'tag_names' => $data['tag_names'] ?? $data['tags'] ?? [],
+        'status' => 'pending_review',
+    ]);
+
+    $tagIds = $this->syncTags($data['tags'] ?? $data['tag_names'] ?? []);
+    $competition->tags()->sync($tagIds);
+
+    app(NotificationService::class)->sendToAdmins(
+        'competition_submitted',
+        'Новое объявление на модерации',
+        "Организатор отправил объявление «{$competition->title}» на модерацию.",
+        [
+            'competition_id' => $competition->id,
+            'competition_status' => $competition->status,
+        ]
+    );
+
+    return response()->json($competition->fresh(['tags', 'category']), 201);
+}
+
+public function update(Request $request, Competition $competition)
+{
+    $this->authorizeOwnerOrAdmin($request->user(), $competition);
+
+    $isAdmin = $request->user()->isAdmin();
+    $isOwner = $competition->user_id === $request->user()->id;
+
+    if ($isOwner && !$isAdmin && in_array($competition->status, ['live', 'finished'], true)) {
+        throw ValidationException::withMessages([
+            'status' => ['Нельзя редактировать соревнование, которое идет или завершено.'],
+        ]);
+    }
+
+    $data = $request->validate([
+        'title' => ['sometimes', 'string', 'max:255'],
+        'description' => ['nullable', 'string'],
+        'city' => ['sometimes', 'string', 'max:255'],
+        'address' => ['nullable', 'string', 'max:500'],
+        'latitude' => ['nullable', 'numeric', 'between:-90,90'],
+        'longitude' => ['nullable', 'numeric', 'between:-180,180'],
+        'starts_at' => ['sometimes', 'date'],
+        'ends_at' => ['nullable', 'date', 'after:starts_at'],
+        'max_participants' => ['sometimes', 'integer', 'min:1', 'max:100'],
+        'category_id' => ['nullable', 'exists:categories,id'],
+        'category_name' => ['nullable', 'string', 'max:255'],
+        'custom_category' => ['nullable', 'string', 'max:255'],
+        'status' => ['sometimes', Rule::in(Competition::STATUSES)],
+        'tags' => ['array'],
+        'tag_names' => ['nullable', 'array'],
+    ]);
+
+    if ($isOwner) {
+        unset($data['status']);
+    }
+
+    $publishedStatuses = ['recruiting', 'upcoming', 'closed'];
+    $needsRemoderation = $isOwner && in_array($competition->status, $publishedStatuses, true);
+    $currentParticipants = $competition->current_participants;
+
+    $competition->fill($data);
+    $competition->current_participants = $currentParticipants;
+
+    if ($needsRemoderation) {
+        $competition->status = 'pending_review';
+        $competition->approved_at = null;
+    }
+
+    $competition->save();
+
+    if (isset($data['tags']) || isset($data['tag_names'])) {
+        $tagIds = $this->syncTags($data['tags'] ?? $data['tag_names'] ?? []);
+        $competition->tags()->sync($tagIds);
+    }
+
+    if ($needsRemoderation) {
+        app(NotificationService::class)->sendToAdmins(
+            'competition_resubmitted',
+            'Объявление отправлено на повторную модерацию',
+            "Организатор изменил опубликованное объявление «{$competition->title}».",
+            [
+                'competition_id' => $competition->id,
+                'competition_status' => $competition->status,
+            ]
+        );
+    }
+
+    return $competition->fresh(['tags', 'category']);
+}
+@@endcode
+@@p Модерация реализована двумя отдельными действиями: approve и requestRevision. Одобрение переводит объявление в статус recruiting и очищает модерационный комментарий. Возврат на доработку переводит объявление в needs_revision и сохраняет комментарий администратора. Организатор видит комментарий на странице редактирования и после исправления отправляет объявление повторно.
+@@p Участие пользователей реализуется через таблицу participations. Перед записью сервер обновляет статус соревнования, проверяет, что мероприятие не завершено, есть свободные места и пользователь еще не записан. После успешной записи создается или восстанавливается участие, увеличивается счетчик current_participants, участнику отправляется подтверждение, а организатор получает уведомление о новой заявке.
+@@code|Листинг 6 - Запись участника, результаты и уведомления
+public function register(Request $request, Competition $competition)
+{
+    $competition->refreshStatus();
+
+    $now = Carbon::now();
+    if ($competition->status === 'finished'
+        || ($competition->ends_at && $now->greaterThanOrEqualTo($competition->ends_at))) {
+        throw ValidationException::withMessages([
+            'competition' => 'Соревнование уже завершено.',
+        ]);
+    }
+
+    if (!$competition->hasCapacity()) {
+        throw ValidationException::withMessages([
+            'competition' => 'Свободных мест нет.',
+        ]);
+    }
+
+    $participation = Participation::firstOrCreate(
+        [
+            'user_id' => $request->user()->id,
+            'competition_id' => $competition->id,
+        ],
+        ['status' => 'registered']
+    );
+
+    if ($participation->wasRecentlyCreated || $participation->status === 'withdrawn') {
+        $competition->increment('current_participants');
+        $participation->update(['status' => 'registered']);
+
+        $notificationService = app(NotificationService::class);
+        $participant = $request->user();
+
+        $notificationService->sendToUser(
+            $participant,
+            'competition_registration_confirmed',
+            'Вы записаны на соревнование',
+            "Вы успешно записались на соревнование «{$competition->title}».",
+            [
+                'competition_id' => $competition->id,
+                'competition_status' => $competition->status,
+            ]
+        );
+
+        if ($competition->user_id !== $participant->id) {
+            $notificationService->sendToUser(
+                $competition->creator,
+                'competition_registration',
+                'Новая запись на объявление',
+                "{$participant->name} записался на объявление «{$competition->title}».",
+                [
+                    'competition_id' => $competition->id,
+                    'participant_id' => $participant->id,
+                ]
+            );
+        }
+    }
+
+    app(AchievementService::class)->recalculateForUser($request->user(), true);
+
+    return response()->json([
+        'message' => 'Вы записаны',
+        'participation' => $participation,
+    ]);
+}
+
+public function finish(Request $request, Competition $competition)
+{
+    $this->authorizeOwnerOrAdmin($request->user(), $competition);
+
+    if (!in_array($competition->status, ['live', 'upcoming', 'recruiting', 'closed'], true)) {
+        throw ValidationException::withMessages([
+            'status' => ['Завершить можно только активное или опубликованное соревнование.'],
+        ]);
+    }
+
+    $competition->status = 'finished';
+    $competition->save();
+
+    $competition->participations()
+        ->where('status', 'registered')
+        ->update(['status' => 'finished']);
+
+    $competition->participations()
+        ->with('user')
+        ->chunkById(100, function ($items) use ($competition) {
+            foreach ($items as $participation) {
+                if (!$participation->user) {
+                    continue;
+                }
+
+                app(NotificationService::class)->sendToUser(
+                    $participation->user,
+                    'competition_finished',
+                    'Соревнование завершено',
+                    "Соревнование «{$competition->title}» завершено. Проверьте результаты.",
+                    ['competition_id' => $competition->id]
+                );
+            }
+        });
+
+    return response()->json([
+        'message' => 'Соревнование завершено',
+        'competition' => $competition->fresh(),
+    ]);
+}
+@@endcode
+@@p Сервис уведомлений выделен в отдельный класс. Он создает запись в таблице user_notifications и при необходимости дублирует сообщение на электронную почту. Дублирование выполняется после завершения основного запроса через app()->terminating, поэтому пользователь не ожидает отправку письма в момент сохранения данных. Это уменьшает задержку ответа API.
+@@code|Листинг 7 - Сервис уведомлений и рассылка важных событий
+class NotificationService
+{
+    private const EMAIL_DUPLICATED_TYPES = [
+        'competition_registration',
+        'competition_registration_confirmed',
+        'competition_updated',
+        'competition_deleted_by_admin',
+        'competition_deleted_by_organizer',
+        'organizer_review_received',
+        'review_reply_received',
+    ];
+
+    public function sendToUser(
+        User $user,
+        string $type,
+        string $title,
+        string $message,
+        array $data = []
+    ): UserNotification {
+        $notification = UserNotification::create([
+            'user_id' => $user->id,
+            'type' => $type,
+            'title' => $title,
+            'message' => $message,
+            'data' => $data ?: null,
+        ]);
+
+        $email = $user->email;
+        if (!empty($email) && $this->shouldDuplicateToEmail($type)) {
+            app()->terminating(function () use ($email, $title, $message) {
+                try {
+                    Mail::raw($message, function ($mail) use ($email, $title) {
+                        $mail->to($email)->subject($title);
+                    });
+                } catch (Throwable $exception) {
+                    report($exception);
+                }
+            });
+        }
+
+        return $notification;
+    }
+
+    private function shouldDuplicateToEmail(string $type): bool
+    {
+        return in_array($type, self::EMAIL_DUPLICATED_TYPES, true)
+            || str_starts_with($type, 'competition_reminder_');
+    }
+
+    public function sendToAdmins(
+        string $type,
+        string $title,
+        string $message,
+        array $data = []
+    ): void {
+        User::query()
+            ->select(['id', 'email'])
+            ->where('is_admin', true)
+            ->get()
+            ->each(function (User $admin) use ($type, $title, $message, $data) {
+                $this->sendToUser($admin, $type, $title, $message, $data);
+            });
+    }
+}
+@@endcode
+@@p Для административной статистики в AdminController выполняются агрегированные запросы по пользователям, соревнованиям, заявкам, статусам, дням, категориям и тегам. Диапазон дат ограничивается одним годом, чтобы пользователь не мог случайно сформировать слишком тяжелый запрос. Дни без событий добавляются в ответ с нулевыми значениями, благодаря чему график на клиенте строится без разрывов.
+@@p Серверная часть также содержит middleware для дополнительных заголовков безопасности, очистки входных данных и обнаружения очевидных SQL-инъекций. Основную защиту обеспечивает Eloquent ORM и строгая валидация запросов, но дополнительные middleware уменьшают риск типовых атак и повышают устойчивость API.
+@@p Таким образом, код проекта реализует не только внешний интерфейс, но и полноценную серверную бизнес-логику: жизненный цикл объявлений, модерацию, участие, результаты, отзывы, уведомления, достижения, рейтинг и административное управление.
+@@h1 3 ТЕСТИРОВАНИЕ И ВНЕДРЕНИЕ ВЕБ-ПРИЛОЖЕНИЯ
+@@h2 3.1 Тестирование веб-приложения
+@@p Тестирование веб-платформы проводилось по основным пользовательским сценариям и по критичным техническим требованиям. Проверялись функциональность, корректность работы базы данных, адаптивность интерфейса, безопасность, производительность и процесс развертывания. Особое внимание уделялось сценариям, которые в текущей версии стали сложнее по сравнению со старой: повторная модерация опубликованного объявления, сохранение участников, уведомления, отзывы, ответы организатора, кастомизация и административные разделы.
+@@p Для тестирования использовались локальная среда разработки, тестовые учетные записи пользователя и администратора, демонстрационные данные сидеров и ручная проверка API-запросов через интерфейс. Сначала проверялась серверная логика и сохранение данных, затем соответствующие действия выполнялись в пользовательском интерфейсе. Такой порядок позволил убедиться, что интерфейс не только визуально работает, но и правильно вызывает серверные маршруты.
+@@table|Таблица 2 - Основные проверяемые сценарии
+Сценарий|Ожидаемый результат|Фактический результат
+Регистрация пользователя|Создается учетная запись, пароль хранится в виде хэша, пользователь может войти|Сценарий выполнен, вход доступен после регистрации
+Создание объявления|Объявление получает статус pending_review и не появляется в публичном каталоге|Сценарий выполнен, администратор видит объявление на модерации
+Одобрение объявления|Статус меняется на recruiting, объявление появляется в каталоге|Сценарий выполнен, карточка доступна гостям и пользователям
+Возврат на доработку|Организатор получает комментарий, статус меняется на needs_revision|Сценарий выполнен, комментарий отображается при редактировании
+Редактирование опубликованного объявления|Объявление уходит на повторную модерацию, участники сохраняются|Сценарий выполнен, заявки не удаляются
+Запись участника|Создается participation, увеличивается current_participants, приходят уведомления|Сценарий выполнен, повторная запись не создается
+Завершение соревнования|Статус меняется на finished, результаты доступны участникам|Сценарий выполнен, отзывы становятся доступными после завершения
+Ответ на отзыв|Организатор сохраняет ответ, участник получает уведомление|Сценарий выполнен, ответ отображается в профиле
+Блокировка пользователя|Пользователь блокируется, его токены удаляются|Сценарий выполнен, повторные действия недоступны
+@@endtable
+@@h3 3.1.1 Тестирование функциональности
+@@p Функциональное тестирование началось с проверки регистрации и входа. Проверялись обязательность имени, электронной почты и пароля, уникальность email, обработка некорректного пароля и получение данных текущего пользователя через маршрут /auth/me. Отдельно проверялись выход из аккаунта и очистка токена на клиенте.
+@@p Далее тестировался каталог соревнований. Для этого создавались объявления с разными городами, категориями, тегами, датами и статусами. Проверялось, что объявления pending_review и needs_revision не отображаются в публичном списке, а опубликованные объявления доступны для гостей. Поиск по названию, фильтры по городу и тегам, сортировка и пагинация возвращали ожидаемый набор карточек.
+@@p Сценарий создания объявления проверялся в несколько этапов. Сначала форма заполнялась корректными данными, выбиралась дата в будущем, количество мест, категория, теги и точка на карте. После отправки сервер возвращал созданный объект со статусом pending_review. Затем специально вводились ошибки: пустое название, дата в прошлом, неверные координаты, слишком большое число участников. Во всех случаях интерфейс показывал сообщение, а сервер не сохранял некорректные данные.
+@@p Модерация проверялась с учетной записи администратора. При одобрении объявление переходило в статус recruiting, появлялось в каталоге и становилось доступным для записи. При возврате на доработку администратор должен был указать комментарий. Организатор видел этот комментарий, вносил изменения и отправлял объявление на повторную проверку через отдельное действие submit-for-review.
+@@p Отдельно проверялся сценарий изменения опубликованного объявления. Это один из ключевых сценариев текущей версии. После редактирования опубликованного объявления статус менялся на pending_review, но записи участников оставались в базе. Администратор видел объявление в списке повторной модерации, а участники сохраняли связь с соревнованием. Такой результат соответствует диаграмме последовательности.
+@@p Запись участника проверялась как для свободного соревнования, так и для соревнования с заполненным лимитом мест. Если свободные места есть, создается запись в participations и увеличивается current_participants. Если мест нет, сервер возвращает ошибку. Повторная запись того же пользователя не создает дубликат из-за уникального ограничения в базе данных.
+@@p Проверка результатов включала внесение места, баллов и примечания. Организатор мог отметить участника как не явившегося или дисквалифицированного. После завершения соревнования участник видел итоговую информацию и мог оставить отзыв об организаторе. Повторное создание отзыва не разрешалось: существующий отзыв обновлялся.
+@@p Проверка административных функций включала список пользователей, поиск по ФИО, username и email, блокировку, разблокировку и назначение администратора. Проверялось, что администратор не может заблокировать сам себя и не может заблокировать другого администратора. Также тестировались страницы категорий, тегов и кастомизации профиля.
+@@h3 3.1.2 Тестирование базы данных
+@@p Тестирование базы данных проводилось через выполнение пользовательских сценариев и проверку состояния связанных таблиц. При создании объявления проверялась запись в competitions и связи с тегами через competition_tag. При записи пользователя проверялась таблица participations и корректное обновление current_participants. При оставлении отзыва проверялась таблица organizer_reviews.
+@@p Особое внимание уделялось целостности данных. При удалении или архивировании объявления связи не должны создавать неконсистентное состояние. Мягкое удаление позволяет скрыть запись, но при необходимости восстановить ее. Такой подход особенно важен для созданных объявлений и участий, поскольку они могут быть связаны с результатами, отзывами и уведомлениями.
+@@p Проверялись ограничения уникальности. Пользователь не может дважды записаться на одно соревнование, потому что в participations используется уникальная пара user_id и competition_id. Пользователь не может оставить несколько отзывов на одно и то же соревнование, потому что отзыв обновляется в рамках существующей записи. Для тегов и категорий используется slug, который предотвращает создание неразличимых справочных значений.
+@@p Проверялась работа индексов и агрегированных запросов. Каталог использует фильтрацию по статусу, городу, датам, категории и тегам. Статистика администратора использует группировку по статусам и датам. Уведомления сортируются по дате создания и фильтруются по пользователю. Наличие индексов ускоряет такие запросы и снижает нагрузку на базу.
+@@table|Таблица 3 - Проверка связей и ограничений базы данных
+Проверка|Ожидаемое поведение|Результат
+Связь competitions.user_id с users.id|Объявление принадлежит существующему пользователю|Связь работает, удаление пользователя очищает зависимые записи
+Связь participations с users и competitions|Участие не существует без пользователя и соревнования|Связь работает, повторная запись блокируется
+Связь competition_tag|Соревнование может иметь несколько тегов|Связь работает, фильтрация по тегам корректна
+Уникальность участия|Один пользователь не создает две заявки на одно соревнование|Повторная заявка не дублируется
+Уникальность отзыва|Один участник оставляет один отзыв по соревнованию|Повторный отзыв обновляет существующую запись
+Уведомления пользователя|Каждое событие сохраняет запись с user_id|Уведомления отображаются в личном кабинете
+@@endtable
+@@h3 3.1.3 Тестирование пользовательского интерфейса и адаптивности
+@@p Интерфейс проверялся на основных разрешениях: широком экране, ноутбуке, планшете и мобильном устройстве. Оценивались читаемость текста, размеры кнопок, поведение карточек, переносы, расположение форм и таблиц. Особое внимание уделялось страницам с большим количеством данных: каталог, профиль, список отзывов, административная таблица пользователей и модерация объявлений.
+@@p На мобильной версии проверялась шапка сайта, доступность основных ссылок, отображение карточек соревнований и форма создания объявления. Длинные названия и города не должны ломать карточку. Кнопки должны оставаться нажимаемыми, а поля формы - не выходить за границы экрана. Для слайдера главной страницы проверялось ручное перелистывание и корректная остановка автопрокрутки после взаимодействия.
+@@placeholder|[ВСТАВИТЬ СКРИНШОТ: мобильная версия главной страницы или каталога]|Рисунок 20 - Мобильная версия интерфейса
+@@p Страница создания объявления дополнительно проверялась из-за карты и подсказок геокодирования. При выборе точки на карте координаты должны попадать в форму, а город должен определяться автоматически либо оставаться доступным для ручного ввода. Если API геокодирования временно недоступен, пользователь все равно может заполнить адрес вручную.
+@@p В административной панели проверялось, что кнопки действий не перекрывают текст и остаются понятными на разных ширинах. Для модерации важно, чтобы комментарий администратора вводился в отдельное поле и был явно связан с действием «Отправить на доработку». Это снижает риск случайного возврата объявления без пояснения.
+@@h3 3.1.4 Тестирование веб-безопасности
+@@p Проверка безопасности включала авторизацию, контроль ролей, защиту от SQL-инъекций, XSS, clickjacking, перебора пароля и доступа к чужим данным. Основное правило безопасности состоит в том, что каждое критичное действие проверяется на сервере. Даже если пользователь вручную отправит запрос к API, Laravel должен проверить токен, роль и право владения сущностью.
+@@p Для защиты от SQL-инъекций используются Eloquent ORM, параметризованные запросы и валидация входных данных. Дополнительно в проекте присутствует middleware, который выявляет очевидные опасные конструкции. Такая проверка не заменяет ORM, но помогает отсеивать часть подозрительных запросов еще до выполнения контроллера.
+@@p Защита от XSS обеспечивается тем, что React экранирует пользовательские значения при выводе. Пользовательский ввод не вставляется в интерфейс как готовый HTML. На сервере поля проходят валидацию по длине и типу. Для заголовков безопасности используется middleware SecurityHeaders, который добавляет X-Frame-Options, X-Content-Type-Options, Referrer-Policy и Content-Security-Policy.
+@@p Для защиты аккаунтов реализованы двухфакторная аутентификация и ограничение неудачных попыток входа. Если пользователь включает 2FA, при входе требуется дополнительный код. При многократных неудачных попытках аккаунт временно блокируется, а сообщения не раскрывают лишнюю информацию о существовании пользователя.
+@@p Административные функции проверялись отдельно. Обычный пользователь не должен иметь доступ к маршрутам /admin/stats, /admin/users, /admin/tags, /admin/categories и /admin/customizations. Также проверялась невозможность редактирования чужого объявления и внесения результатов не владельцем соревнования.
+@@h3 3.1.5 Тестирование производительности
+@@p Производительность проверялась на сценариях, которые чаще всего выполняются пользователями: загрузка главной страницы, каталога, карточки соревнования, профиля, уведомлений и административной статистики. Для каталога особенно важна скорость выборки по фильтрам, потому что пользователь может часто изменять параметры поиска.
+@@p На серверной стороне уменьшение нагрузки достигается за счет индексов, пагинации и выборочной загрузки связей. Каталог возвращает ограниченное количество записей на страницу, а профиль и карточка соревнования загружают только необходимые связи. Для рассылки уведомлений по участникам используется обработка чанками, что предотвращает загрузку слишком большого набора записей в память.
+@@p На клиентской стороне оптимизация достигается за счет единого API-клиента с таймаутом, повторного использования компонентов, оптимизации изображений и разделения страниц. Статические изображения слайдера подготовлены заранее, а внешние ссылки к аватарам и элементам кастомизации формируются через helper getStorageUrl.
+@@p Проверка показала, что основные страницы остаются отзывчивыми при демонстрационном наборе данных. Для дальнейшего развития проекта можно добавить серверное кеширование справочников категорий и тегов, очереди для почтовой рассылки и более подробный мониторинг времени ответа API.
+@@h2 3.2 Развертывание на хостинге
+@@p Для размещения проекта выбран VPS-сервер Beget. Такой вариант подходит для приложения, состоящего из Next.js, Laravel API и MySQL. В отличие от обычного виртуального хостинга, VPS позволяет настроить Node.js, PM2, Nginx, PHP-FPM, MySQL, cron-задачи Laravel scheduler и отдельные домены для клиентской и серверной частей.
+@@p Рекомендуемая структура размещения проекта на сервере: /var/www/nastarte/backend для Laravel API и /var/www/nastarte/frontend для Next.js. Для backend создается production-файл .env с настройками базы данных, домена API, frontend URL, почты, Sanctum и CORS. Для frontend создается .env.production с адресом API, адресом сайта и ключом карт, если используется внешний картографический сервис.
+@@p Общая последовательность внедрения включает подготовку сервера, установку зависимостей, загрузку проекта, создание базы данных, настройку Laravel, сборку Next.js, настройку Nginx, подключение HTTPS и запуск планировщика. После каждого этапа выполняется контрольная проверка, чтобы ошибка не переносилась на следующий шаг.
+@@code|Листинг 8 - Пример настройки окружения и веб-сервера при развертывании
+# Подготовка сервера
+sudo apt update
+sudo apt upgrade -y
+sudo apt install -y git unzip curl nginx mysql-server \
+  php-cli php-fpm php-mysql php-mbstring php-xml php-curl \
+  php-zip php-bcmath php-gd php-intl
+
+# Composer
+curl -sS https://getcomposer.org/installer | php
+sudo mv composer.phar /usr/local/bin/composer
+
+# Node.js и PM2
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+sudo apt install -y nodejs
+sudo npm install -g pm2
+
+# Загрузка проекта
+sudo mkdir -p /var/www/nastarte
+sudo chown -R $USER:www-data /var/www/nastarte
+cd /var/www/nastarte
+git clone <URL_РЕПОЗИТОРИЯ> .
+
+# База данных
+sudo mysql
+CREATE DATABASE nastarte CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'nastarte'@'localhost' IDENTIFIED BY 'STRONG_PASSWORD';
+GRANT ALL PRIVILEGES ON nastarte.* TO 'nastarte'@'localhost';
+FLUSH PRIVILEGES;
+EXIT;
+
+# Laravel API
+cd /var/www/nastarte/backend
+composer install --no-dev --optimize-autoloader
+cp .env.example .env
+php artisan key:generate
+php artisan migrate --seed
+php artisan storage:link
+php artisan optimize
+sudo chown -R www-data:www-data storage bootstrap/cache
+
+# Next.js frontend
+cd /var/www/nastarte/frontend
+cp .env.example .env.production
+npm ci
+npm run build
+pm2 start npm --name nastarte-frontend -- start -- -p 3000
+pm2 save
+pm2 startup
+
+# Nginx для Laravel API
+server {
+    listen 80;
+    server_name api.example.ru;
+    root /var/www/nastarte/backend/public;
+    index index.php;
+
+    add_header X-Frame-Options "DENY" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/run/php/php-fpm.sock;
+    }
+}
+
+# Nginx для Next.js
+server {
+    listen 80;
+    server_name example.ru www.example.ru;
+
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
+
+# Планировщик Laravel
+* * * * * cd /var/www/nastarte/backend && php artisan schedule:run >> /dev/null 2>&1
+@@endcode
+@@p После настройки Nginx выполняется проверка конфигурации командой sudo nginx -t и перезапуск веб-сервера. Для HTTPS можно использовать сертификаты, выданные хостингом, либо Certbot. После перехода на HTTPS обязательно меняются APP_URL, FRONTEND_URL, NEXT_PUBLIC_API_URL и NEXT_PUBLIC_SITE_URL, затем очищается кеш Laravel и пересобирается frontend.
+@@p Проверка после развертывания включает запрос к /api/health, просмотр статуса PM2, состояние Nginx, статус миграций и ручной проход по главным сценариям: регистрация, вход, каталог, создание объявления, модерация, запись участника, уведомления, отзывы и административная статистика. Если все проверки выполнены успешно, приложение считается внедренным.
+@@placeholder|[ВСТАВИТЬ СКРИНШОТ ИЛИ ФОТО: проверка работы сайта после развертывания на хостинге]|Рисунок 21 - Проверка работоспособности сайта после развертывания
+@@h2 3.3 Разработка технической документации
+@@p Техническая документация проекта предназначена для сопровождения веб-платформы после разработки. Она фиксирует архитектуру, структуру сайта, основные диаграммы, порядок развертывания, назначение маршрутов API, требования к окружению и контрольные сценарии тестирования. Наличие документации важно, потому что проект состоит из двух приложений и нескольких связанных сервисов.
+@@p В состав документации входят: диаграмма вариантов использования, диаграмма деятельности, диаграмма последовательности, структура сайта, описание базы данных, описание клиентской и серверной частей, инструкция по развертыванию на VPS, перечень проверяемых пользовательских сценариев и описание мер безопасности. Эти материалы позволяют понять, как работает система, даже без детального изучения всего исходного кода.
+@@p Для администратора документация должна описывать рабочие операции: просмотр объявлений на модерации, одобрение, возврат на доработку, блокировку пользователей, управление категориями и тегами, просмотр статистики и управление элементами кастомизации. Для организатора важны инструкции по созданию объявления, повторной отправке на модерацию, управлению участниками и занесению результатов. Для участника - регистрация, запись, уведомления, отзывы и просмотр результатов.
+@@p Для разработчика наиболее важны сведения о структуре каталогов, переменных окружения, API-маршрутах, миграциях, сидерах и планировщике. Отдельно нужно фиксировать, что уведомления о соревнованиях требуют корректной настройки почты, а напоминания о старте требуют работающего cron. При переносе проекта на другой сервер эти детали являются критичными.
+@@p Документация также должна включать контрольный список после обновления проекта:
+@@b выполнить миграции базы данных и проверить php artisan migrate:status;
+@@b очистить и заново собрать кеш Laravel после изменения .env;
+@@b пересобрать frontend после изменения NEXT_PUBLIC_* переменных;
+@@b проверить доступность /api/health и основных публичных маршрутов;
+@@b проверить авторизацию, создание объявления, модерацию и запись участника;
+@@b убедиться, что scheduler Laravel запускается cron-задачей;
+@@b проверить отправку почтовых уведомлений и отображение уведомлений внутри сайта;
+@@b проверить права доступа к административным страницам.
+@@p Таким образом, разделы разработки, тестирования и внедрения описывают актуальную версию платформы «НаСтарте» как завершенное веб-приложение. В документации отражены диаграммы, структура сайта, база данных, frontend, backend, листинги ключевых участков кода, проверка работоспособности и порядок публикации проекта на сервере.

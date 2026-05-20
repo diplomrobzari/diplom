@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Throwable;
 
 class GeocodeController extends Controller
 {
@@ -146,7 +147,12 @@ class GeocodeController extends Controller
             $params['sco'] = $sco;
         }
 
-        $response = Http::timeout(5)->get('https://geocode-maps.yandex.ru/1.x/', $params);
+        try {
+            $response = Http::timeout(5)->get('https://geocode-maps.yandex.ru/1.x/', $params);
+        } catch (Throwable $exception) {
+            report($exception);
+            return null;
+        }
 
         if (!$response->successful()) {
             return null;
@@ -164,16 +170,21 @@ class GeocodeController extends Controller
     private function requestNominatimReverse(float $lat, float $lng): ?array
     {
         foreach ([18, 16, 14, 12, 10] as $zoom) {
-            $response = Http::withHeaders([
-                'User-Agent' => config('app.name', 'Nastarte') . '/1.0',
-            ])->timeout(5)->get('https://nominatim.openstreetmap.org/reverse', [
-                'format' => 'jsonv2',
-                'lat' => $lat,
-                'lon' => $lng,
-                'accept-language' => 'ru',
-                'addressdetails' => 1,
-                'zoom' => $zoom,
-            ]);
+            try {
+                $response = Http::withHeaders([
+                    'User-Agent' => config('app.name', 'Nastarte') . '/1.0',
+                ])->timeout(5)->get('https://nominatim.openstreetmap.org/reverse', [
+                    'format' => 'jsonv2',
+                    'lat' => $lat,
+                    'lon' => $lng,
+                    'accept-language' => 'ru',
+                    'addressdetails' => 1,
+                    'zoom' => $zoom,
+                ]);
+            } catch (Throwable $exception) {
+                report($exception);
+                continue;
+            }
 
             if (!$response->successful()) {
                 continue;

@@ -12,9 +12,11 @@ use App\Services\AchievementService;
 use App\Services\NotificationService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class CompetitionController extends Controller
 {
@@ -116,28 +118,42 @@ class CompetitionController extends Controller
             'tag_names.*' => ['string', 'max:50'],
         ]);
 
-        $competition = Competition::create([
-            'user_id' => $request->user()->id,
-            'title' => $data['title'],
-            'description' => $data['description'] ?? null,
-            'city' => $data['city'],
-            'address' => $data['address'] ?? null,
-            'latitude' => $data['latitude'] ?? null,
-            'longitude' => $data['longitude'] ?? null,
-            'starts_at' => new Carbon($data['starts_at']),
-            'ends_at' => isset($data['ends_at']) ? new Carbon($data['ends_at']) : null,
-            'max_participants' => $data['max_participants'],
-            'category_id' => $data['category_id'] ?? null,
-            'category_name' => $data['category_name'] ?? null,
-            'custom_category' => $data['custom_category'] ?? null,
-            'tag_names' => $data['tag_names'] ?? $data['tags'] ?? [],
-            'status' => 'pending_review',
-        ]);
+        try {
+            $competition = DB::transaction(function () use ($data, $request) {
+                $competition = Competition::create([
+                    'user_id' => $request->user()->id,
+                    'title' => $data['title'],
+                    'description' => $data['description'] ?? null,
+                    'city' => $data['city'],
+                    'address' => $data['address'] ?? null,
+                    'latitude' => $data['latitude'] ?? null,
+                    'longitude' => $data['longitude'] ?? null,
+                    'starts_at' => new Carbon($data['starts_at']),
+                    'ends_at' => isset($data['ends_at']) ? new Carbon($data['ends_at']) : null,
+                    'max_participants' => $data['max_participants'],
+                    'category_id' => $data['category_id'] ?? null,
+                    'category_name' => $data['category_name'] ?? null,
+                    'custom_category' => $data['custom_category'] ?? null,
+                    'tag_names' => $data['tag_names'] ?? $data['tags'] ?? [],
+                    'status' => 'pending_review',
+                ]);
 
-        $tagIds = $this->syncTags($data['tags'] ?? $data['tag_names'] ?? []);
-        $competition->tags()->sync($tagIds);
+                $tagIds = $this->syncTags($data['tags'] ?? $data['tag_names'] ?? []);
+                $competition->tags()->sync($tagIds);
 
-        app(NotificationService::class)->sendToAdmins(
+                return $competition->fresh(['tags', 'category']);
+            });
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return response()->json([
+                'message' => 'Не удалось создать объявление. Проверьте данные и попробуйте снова.',
+                'debug' => config('app.debug') ? $exception->getMessage() : null,
+            ], 500);
+        }
+
+        try {
+            app(NotificationService::class)->sendToAdmins(
             'competition_submitted',
             'Новое объявление на модерации',
             "Организатор отправил объявление «{$competition->title}» на модерацию.",
@@ -145,7 +161,10 @@ class CompetitionController extends Controller
                 'competition_id' => $competition->id,
                 'competition_status' => $competition->status,
             ]
-        );
+            );
+        } catch (Throwable $exception) {
+            report($exception);
+        }
 
         return response()->json($competition->fresh(['tags', 'category']), 201);
     }
@@ -897,12 +916,47 @@ class CompetitionController extends Controller
     {
         $tagIds = [];
         foreach ($tags as $tagName) {
+            if (! is_string($tagName)) {
+                continue;
+            }
+
+            $tagName = trim($tagName);
+            if ($tagName === '') {
+                continue;
+            }
+
             $slug = Str::slug($tagName);
-            $tag = Tag::firstOrCreate(['slug' => $slug], ['name' => $tagName]);
+            $tag = Tag::query()
+                ->where('slug', $tagName)
+                ->orWhere('name', $tagName)
+                ->when($slug !== '', fn ($query) => $query->orWhere('slug', $slug))
+                ->first();
+
+            if (! $tag) {
+                $tag = Tag::create([
+                    'name' => $tagName,
+                    'slug' => $slug !== '' ? $slug : $this->uniqueFallbackTagSlug($tagName),
+                ]);
+            }
+
             $tagIds[] = $tag->id;
         }
 
-        return $tagIds;
+        return array_values(array_unique($tagIds));
+    }
+
+    private function uniqueFallbackTagSlug(string $tagName): string
+    {
+        $base = 'tag-' . substr(sha1($tagName), 0, 12);
+        $slug = $base;
+        $counter = 2;
+
+        while (Tag::query()->where('slug', $slug)->exists()) {
+            $slug = $base . '-' . $counter;
+            $counter++;
+        }
+
+        return $slug;
     }
 
     private function authorizeOwnerOrAdmin($user, Competition $competition): void
