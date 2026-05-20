@@ -310,7 +310,7 @@ export default function CompetitionPage() {
     registeredParticipants.length + finishedParticipants.filter((p) => p.status === "finished").length;
 
   return (
-    <div className="min-h-screen bg-[#F5F5F5]">
+    <div className="min-h-screen overflow-x-hidden bg-[#F5F5F5]">
       <section className="bg-gradient-to-br from-[#7D39EB] to-black text-white py-16 relative overflow-hidden">
         <div className="absolute top-10 left-10 w-32 h-32 bg-[#C6FF33] rounded-full opacity-10 blur-3xl"></div>
         <div className="absolute bottom-10 right-10 w-40 h-40 bg-[#C6FF33] rounded-full opacity-10 blur-3xl"></div>
@@ -328,9 +328,9 @@ export default function CompetitionPage() {
             </Link>
           </div>
 
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0 flex-1">
+              <div className="mb-4 flex flex-wrap items-center gap-3">
                 <StatusBadge status={item.status} />
                 {item.category_name && (
                   <span className="px-3 py-1 bg-[#C6FF33]/20 text-[#C6FF33] rounded-full text-sm font-medium">
@@ -343,8 +343,8 @@ export default function CompetitionPage() {
                   </span>
                 )}
               </div>
-              <h1 className="heading-lg mb-2">{item.title}</h1>
-              <p className="text-lg text-blue-100 flex items-center gap-2">
+              <h1 className="heading-lg mb-2 break-words">{item.title}</h1>
+              <p className="flex min-w-0 items-center gap-2 break-words text-lg text-blue-100">
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                   <path
                     fillRule="evenodd"
@@ -361,7 +361,7 @@ export default function CompetitionPage() {
                 src={getStorageUrl(item.creator.avatar_url) || item.creator.avatar_url}
                 alt={`Аватар организатора: ${item.creator.name}`}
                 title={item.creator.name}
-                className="w-16 h-16 rounded-full border-4 border-[#C6FF33]/30"
+                className="h-16 w-16 shrink-0 rounded-full border-4 border-[#C6FF33]/30"
                 loading="lazy"
               />
             )}
@@ -369,7 +369,7 @@ export default function CompetitionPage() {
         </div>
       </section>
 
-      <main className="mx-auto max-w-7xl px-4 py-8">
+      <main className="mx-auto w-full max-w-7xl overflow-hidden px-4 py-8">
         {message && (
           <div
             className={`mb-6 rounded-xl p-4 ${
@@ -382,18 +382,18 @@ export default function CompetitionPage() {
           </div>
         )}
 
-        <div className="grid lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-6">
+        <div className="grid min-w-0 gap-8 lg:grid-cols-3">
+          <div className="min-w-0 space-y-6 lg:col-span-2">
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
               <h2 className="text-xl font-bold text-[#7D39EB] uppercase mb-4">О соревновании</h2>
-              <p className="text-gray-700 whitespace-pre-line">{item.description}</p>
+              <p className="whitespace-pre-line break-words text-gray-700">{item.description}</p>
 
               {item.moderation_comment && (isCreator || isAdmin) && (
                 <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
                   <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">
                     Комментарий модератора
                   </p>
-                  <p className="mt-2 whitespace-pre-line text-sm text-amber-900">{item.moderation_comment}</p>
+                  <p className="mt-2 whitespace-pre-line break-words text-sm text-amber-900">{item.moderation_comment}</p>
                 </div>
               )}
 
@@ -403,7 +403,7 @@ export default function CompetitionPage() {
                     <Link
                       key={tag.id}
                       href={getTagFilterHref(tag.slug)}
-                      className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm transition-colors hover:bg-[#7D39EB] hover:text-white"
+                      className="max-w-full break-words rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-700 transition-colors hover:bg-[#7D39EB] hover:text-white"
                       title={`Показать объявления с тегом: ${tag.name}`}
                     >
                       #{tag.name}
@@ -416,8 +416,8 @@ export default function CompetitionPage() {
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
               <h2 className="text-xl font-bold text-[#7D39EB] uppercase mb-4">Детали</h2>
               <div className="grid sm:grid-cols-2 gap-4">
-                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                  <div className="w-10 h-10 bg-[#7D39EB] rounded-full flex items-center justify-center">
+                <div className="flex min-w-0 items-center gap-3 rounded-xl bg-gray-50 p-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#7D39EB]">
                     <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
                       <path
                         fillRule="evenodd"
@@ -426,9 +426,9 @@ export default function CompetitionPage() {
                       />
                     </svg>
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-xs text-gray-500 uppercase">Дата начала</p>
-                    <p className="font-semibold text-[#7D39EB]">
+                    <p className="break-words font-semibold text-[#7D39EB]">
                       {new Date(item.starts_at).toLocaleDateString("ru-RU", {
                         day: "numeric",
                         month: "long",
@@ -441,8 +441,8 @@ export default function CompetitionPage() {
                 </div>
 
                 {item.ends_at && (
-                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                    <div className="w-10 h-10 bg-[#7D39EB] rounded-full flex items-center justify-center">
+                  <div className="flex min-w-0 items-center gap-3 rounded-xl bg-gray-50 p-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#7D39EB]">
                       <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
                         <path
                           fillRule="evenodd"
@@ -451,9 +451,9 @@ export default function CompetitionPage() {
                         />
                       </svg>
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-xs text-gray-500 uppercase">Дата окончания</p>
-                      <p className="font-semibold text-[#7D39EB]">
+                      <p className="break-words font-semibold text-[#7D39EB]">
                         {new Date(item.ends_at).toLocaleDateString("ru-RU", {
                           day: "numeric",
                           month: "long",
@@ -466,23 +466,23 @@ export default function CompetitionPage() {
                   </div>
                 )}
 
-                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                  <div className="w-10 h-10 bg-[#7D39EB] rounded-full flex items-center justify-center">
+                <div className="flex min-w-0 items-center gap-3 rounded-xl bg-gray-50 p-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#7D39EB]">
                     <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
                       <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
                     </svg>
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-xs text-gray-500 uppercase">Участники</p>
-                    <p className="font-semibold text-[#7D39EB]">
+                    <p className="break-words font-semibold text-[#7D39EB]">
                       {occupiedSlots} / {item.max_participants || "∞"}
                     </p>
                   </div>
                 </div>
 
                 {item.address && (
-                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                    <div className="w-10 h-10 bg-[#7D39EB] rounded-full flex items-center justify-center">
+                  <div className="flex min-w-0 items-center gap-3 rounded-xl bg-gray-50 p-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#7D39EB]">
                       <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
                         <path
                           fillRule="evenodd"
@@ -491,9 +491,9 @@ export default function CompetitionPage() {
                         />
                       </svg>
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-xs text-gray-500 uppercase">Адрес</p>
-                      <p className="font-semibold text-[#7D39EB]">{item.address}</p>
+                      <p className="break-words font-semibold text-[#7D39EB]">{item.address}</p>
                     </div>
                   </div>
                 )}
@@ -619,11 +619,11 @@ export default function CompetitionPage() {
                             );
                           })}
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex flex-col gap-2 sm:flex-row">
                         <button
                           onClick={handleSaveResults}
                           disabled={savingResults}
-                          className="btn-primary flex-1"
+                          className="btn-primary min-w-0 flex-1"
                         >
                           {savingResults ? "..." : "Сохранить"}
                         </button>
@@ -632,7 +632,7 @@ export default function CompetitionPage() {
                             setShowResultsForm(false);
                             setResults({});
                           }}
-                          className="btn-secondary px-4 py-3"
+                          className="btn-secondary min-w-0 px-4 py-3"
                         >
                           Отмена
                         </button>
@@ -673,19 +673,19 @@ export default function CompetitionPage() {
                           <Link
                             key={p.id}
                             href={`/users/${p.user?.id}`}
-                            className={`flex items-center justify-between p-4 rounded-xl hover:opacity-90 transition-opacity ${
+                            className={`flex min-w-0 flex-col gap-3 rounded-xl p-4 transition-opacity hover:opacity-90 sm:flex-row sm:items-center sm:justify-between ${
                               isTopThree ? "bg-gradient-to-r from-[#C6FF33]/20 to-transparent" : "bg-gray-50"
                             }`}
                           >
-                            <div className="flex items-center gap-3">
+                            <div className="flex min-w-0 items-center gap-3">
                               {hasPlace ? (
                                 <div
-                                  className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${placeColors.bg} ${placeColors.text}`}
+                                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-bold ${placeColors.bg} ${placeColors.text}`}
                                 >
                                   {p.place}
                                 </div>
                               ) : isNoShow ? (
-                                <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold bg-orange-200 text-orange-700">
+                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-200 font-bold text-orange-700">
                                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                     <path
                                       fillRule="evenodd"
@@ -695,7 +695,7 @@ export default function CompetitionPage() {
                                   </svg>
                                 </div>
                               ) : isDisqualified ? (
-                                <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold bg-red-200 text-red-700">
+                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-200 font-bold text-red-700">
                                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                     <path
                                       fillRule="evenodd"
@@ -705,35 +705,35 @@ export default function CompetitionPage() {
                                   </svg>
                                 </div>
                               ) : (
-                                <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold bg-gray-200 text-gray-400">
+                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-200 font-bold text-gray-400">
                                   {index + 1}
                                 </div>
                               )}
 
-                              <div className="flex items-center gap-3">
+                              <div className="flex min-w-0 items-center gap-3">
                                 {p.user?.avatar_url ? (
                                   <img
                                     src={getStorageUrl(p.user.avatar_url) || p.user.avatar_url}
                                     alt={`Аватар: ${p.user.name || p.user.username}`}
                                     title={p.user.name || p.user.username || "Участник"}
-                                    className="w-10 h-10 rounded-full object-cover"
+                                    className="h-10 w-10 shrink-0 rounded-full object-cover"
                                     loading="lazy"
                                   />
                                 ) : (
-                                  <div className="w-10 h-10 bg-[#7D39EB] rounded-full flex items-center justify-center text-white font-bold">
+                                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#7D39EB] font-bold text-white">
                                     {p.user?.name?.[0]?.toUpperCase()}
                                   </div>
                                 )}
-                                <div>
-                                  <span className="font-medium text-gray-700 block">
+                                <div className="min-w-0">
+                                  <span className="block break-words font-medium text-gray-700">
                                     @{p.user?.username || p.user?.name}
                                   </span>
-                                  <span className="text-xs text-gray-500">{p.user?.name}</span>
+                                  <span className="break-words text-xs text-gray-500">{p.user?.name}</span>
                                 </div>
                               </div>
                             </div>
 
-                            <div className="text-right">
+                            <div className="min-w-0 text-left sm:text-right">
                               {isNoShow && <span className="text-xs text-orange-600 font-medium">Не явился</span>}
                               {isDisqualified && (
                                 <span className="text-xs text-red-600 font-medium">Дисквалифицирован</span>
@@ -748,7 +748,7 @@ export default function CompetitionPage() {
                                       Баллы: <span className="font-semibold text-[#7D39EB]">{p.score}</span>
                                     </p>
                                   )}
-                                  {p.result_note && <p className="text-xs text-gray-500">{p.result_note}</p>}
+                                      {p.result_note && <p className="break-words text-xs text-gray-500">{p.result_note}</p>}
                                   {!p.place && !p.score && (
                                     <span className="text-xs text-gray-500">Без результата</span>
                                   )}
@@ -762,7 +762,7 @@ export default function CompetitionPage() {
                                   e.preventDefault();
                                   handleRemoveParticipant(p.user?.id || 0);
                                 }}
-                                className="btn-danger-sm ml-4 text-sm"
+                                className="btn-danger-sm w-full text-sm sm:ml-4 sm:w-auto"
                               >
                                 Удалить
                               </button>
@@ -776,7 +776,7 @@ export default function CompetitionPage() {
             )}
           </div>
 
-          <div className="space-y-6">
+          <div className="min-w-0 space-y-6">
             {isAdmin && !isCreator && (
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
                 <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4 pb-2 border-b border-gray-200">
@@ -929,23 +929,23 @@ export default function CompetitionPage() {
             {item.creator && (
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
                 <h3 className="text-sm font-semibold text-gray-600 uppercase mb-4">Организатор</h3>
-                <Link href={`/users/${item.creator.id}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                <Link href={`/users/${item.creator.id}`} className="flex min-w-0 items-center gap-3 transition-opacity hover:opacity-80">
                   {item.creator.avatar_url ? (
                     <img
                       src={getStorageUrl(item.creator.avatar_url) || item.creator.avatar_url}
                       alt={`Аватар организатора: ${item.creator.name}`}
                       title={item.creator.name}
-                      className="w-12 h-12 rounded-full object-cover"
+                      className="h-12 w-12 shrink-0 rounded-full object-cover"
                       loading="lazy"
                     />
                   ) : (
-                    <div className="w-12 h-12 bg-[#7D39EB] rounded-full flex items-center justify-center text-white font-bold">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#7D39EB] font-bold text-white">
                       {item.creator.name[0].toUpperCase()}
                     </div>
                   )}
-                  <div>
-                    <p className="font-semibold text-gray-900">@{item.creator.username}</p>
-                    <p className="text-sm text-gray-500">{item.creator.name}</p>
+                  <div className="min-w-0">
+                    <p className="break-words font-semibold text-gray-900">@{item.creator.username}</p>
+                    <p className="break-words text-sm text-gray-500">{item.creator.name}</p>
                   </div>
                 </Link>
               </div>

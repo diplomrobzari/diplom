@@ -49,4 +49,22 @@ class NotificationController extends Controller
 
         return response()->json(['message' => 'Все уведомления отмечены прочитанными']);
     }
+
+    public function destroySelected(Request $request)
+    {
+        $data = $request->validate([
+            'ids' => ['required', 'array', 'min:1', 'max:100'],
+            'ids.*' => ['integer'],
+        ]);
+
+        $deleted = $request->user()
+            ->notifications()
+            ->whereIn('id', array_unique($data['ids']))
+            ->delete();
+
+        return response()->json([
+            'message' => 'Уведомления удалены',
+            'deleted' => $deleted,
+        ]);
+    }
 }
