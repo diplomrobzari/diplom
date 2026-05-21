@@ -193,7 +193,7 @@ export function Header() {
   const profileAvatarUrl = getStorageUrl(user?.avatar_url);
 
   return (
-    <header className="sticky top-0 z-50 bg-[#7D39EB] text-white">
+    <header className="sticky top-0 z-50 border-b border-[#C6FF33]/80 bg-[#7D39EB] text-white shadow-[0_1px_0_rgba(198,255,51,0.25)]">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-20 items-center justify-between">
           <Link href="/" className="group flex items-center gap-3">
