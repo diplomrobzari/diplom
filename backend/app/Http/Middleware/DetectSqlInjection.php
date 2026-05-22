@@ -14,7 +14,11 @@ class DetectSqlInjection
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $payload = array_merge($request->query(), $request->request->all());
+        $payload = [
+            $request->query(),
+            $request->request->all(),
+            $request->getQueryString() ?? '',
+        ];
         if ($this->containsSqlInjectionPattern($payload)) {
             return response()->json([
                 'message' => 'Запрос отклонен системой безопасности.',
@@ -27,7 +31,11 @@ class DetectSqlInjection
     private function containsSqlInjectionPattern(mixed $value): bool
     {
         if (is_array($value)) {
-            foreach ($value as $item) {
+            foreach ($value as $key => $item) {
+                if (is_string($key) && $this->containsSqlInjectionPattern($key)) {
+                    return true;
+                }
+
                 if ($this->containsSqlInjectionPattern($item)) {
                     return true;
                 }
@@ -40,7 +48,7 @@ class DetectSqlInjection
             return false;
         }
 
-        $normalized = mb_strtolower(trim($value), 'UTF-8');
+        $normalized = $this->normalizePayload($value);
         if ($normalized === '') {
             return false;
         }
@@ -57,7 +65,13 @@ class DetectSqlInjection
             '/--\s*$/i',
             '/\/\*.*\*\//i',
             '/;\s*(select|insert|update|delete|drop)\b/i',
-            '/\b(sleep|benchmark)\s*\(/i',
+            '/\b(sleep|benchmark|pg_sleep)\s*\(/i',
+            '/\bwaitfor\b\s+\bdelay\b/i',
+            '/\bfrom\b\s+\bdual\b/i',
+            '/\butl_inaddr\b/i',
+            '/\bget_host_name\b/i',
+            '/\bdbms_(pipe|lock)\b/i',
+            '/\binformation_schema\b/i',
         ];
 
         foreach ($patterns as $pattern) {
@@ -67,5 +81,20 @@ class DetectSqlInjection
         }
 
         return false;
+    }
+
+    private function normalizePayload(string $value): string
+    {
+        $normalized = str_replace('+', ' ', trim($value));
+
+        for ($i = 0; $i < 2; $i++) {
+            $decoded = rawurldecode($normalized);
+            if ($decoded === $normalized) {
+                break;
+            }
+            $normalized = $decoded;
+        }
+
+        return mb_strtolower($normalized, 'UTF-8');
     }
 }
