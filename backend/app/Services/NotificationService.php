@@ -13,6 +13,8 @@ class NotificationService
         'competition_registration',
         'competition_registration_confirmed',
         'competition_updated',
+        'competition_approved',
+        'competition_revision_requested',
         'competition_deleted_by_admin',
         'competition_deleted_by_organizer',
         'organizer_review_received',

@@ -25,8 +25,10 @@ class ProfileController extends Controller
 
         $loaded = $user->load([
             'participations' => function ($query) {
-                $query->with(['competition' => function ($q) {
-                    $q->withTrashed()->with(['tags', 'creator']);
+                $query->whereHas('competition', function ($q) {
+                    $q->whereNull('deleted_at');
+                })->with(['competition' => function ($q) {
+                    $q->whereNull('deleted_at')->with(['tags', 'creator']);
                 }])
                 ->whereNull('deleted_at'); // Только активные участия
             },
@@ -58,10 +60,16 @@ class ProfileController extends Controller
                     ->with('tags')
                     ->orderBy('created_at', 'desc');
             },
-            'participations.competition' => function ($query) {
-                $query->whereNotIn('status', ['pending_review', 'needs_revision'])
-                    ->withTrashed()
-                    ->with(['tags', 'creator']);
+            'participations' => function ($query) {
+                $query->whereNull('deleted_at')
+                    ->whereHas('competition', function ($q) {
+                        $q->whereNull('deleted_at')
+                            ->whereNotIn('status', ['pending_review', 'needs_revision']);
+                    })
+                    ->with(['competition' => function ($q) {
+                        $q->whereNotIn('status', ['pending_review', 'needs_revision'])
+                            ->with(['tags', 'creator']);
+                    }]);
             },
             'userAchievements.achievement',
             'reviewsAuthored',

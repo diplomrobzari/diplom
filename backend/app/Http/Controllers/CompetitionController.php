@@ -212,6 +212,8 @@ class CompetitionController extends Controller
         $needsRemoderation = $isOwner && in_array($competition->status, $publishedStatuses, true);
         $wasPublishedBeforeEdit = $needsRemoderation;
         $currentParticipants = $competition->current_participants;
+        $startsAtChanged = $this->dateFieldChanged($data, 'starts_at', $competition->starts_at);
+        $endsAtChanged = $this->dateFieldChanged($data, 'ends_at', $competition->ends_at);
 
         // Сохраняем старые значения для уведомления
         $changes = [];
@@ -227,13 +229,13 @@ class CompetitionController extends Controller
         if (isset($data['address']) && $data['address'] !== $competition->address) {
             $changes[] = 'Адрес';
         }
-        if (isset($data['starts_at']) && $data['starts_at'] !== $competition->starts_at?->toIso8601String()) {
+        if ($startsAtChanged) {
             $changes[] = 'Дата начала';
         }
-        if (isset($data['ends_at']) && $data['ends_at'] !== $competition->ends_at?->toIso8601String()) {
+        if ($endsAtChanged) {
             $changes[] = 'Дата окончания';
         }
-        if (isset($data['max_participants']) && $data['max_participants'] !== $competition->max_participants) {
+        if (isset($data['max_participants']) && (int) $data['max_participants'] !== (int) $competition->max_participants) {
             $changes[] = 'Количество мест';
         }
 
@@ -253,6 +255,12 @@ class CompetitionController extends Controller
         }
         
         $competition->save();
+
+        if ($startsAtChanged) {
+            DB::table('competition_reminders')
+                ->where('competition_id', $competition->id)
+                ->delete();
+        }
 
         if (isset($data['tags']) || isset($data['tag_names'])) {
             $tagIds = $this->syncTags($data['tags'] ?? $data['tag_names'] ?? []);
@@ -324,6 +332,20 @@ class CompetitionController extends Controller
             'approved_at' => now(),
             'moderation_comment' => null,
         ]);
+
+        $competition->loadMissing('creator');
+        if ($competition->creator) {
+            app(NotificationService::class)->sendToUser(
+                $competition->creator,
+                'competition_approved',
+                'Объявление одобрено',
+                "Ваше объявление «{$competition->title}» одобрено и опубликовано на сайте.",
+                [
+                    'competition_id' => $competition->id,
+                    'competition_status' => $competition->status,
+                ]
+            );
+        }
 
         return response()->json(['message' => 'Объявление одобрено', 'competition' => $competition]);
     }
@@ -910,6 +932,24 @@ class CompetitionController extends Controller
             'message' => $existingReview ? 'Отзыв обновлён' : 'Отзыв сохранён',
             'review' => $review->load(['competition', 'reviewer']),
         ]);
+    }
+
+    private function dateFieldChanged(array $data, string $key, $current): bool
+    {
+        if (! array_key_exists($key, $data)) {
+            return false;
+        }
+
+        $incoming = $data[$key] ?? null;
+        if ($incoming === null || $incoming === '') {
+            return $current !== null;
+        }
+
+        if ($current === null) {
+            return true;
+        }
+
+        return ! Carbon::parse($incoming)->equalTo(Carbon::parse($current));
     }
 
     private function syncTags(array $tags): array
