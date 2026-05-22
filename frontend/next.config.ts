@@ -26,6 +26,7 @@ const nextConfig: NextConfig = {
   compress: true,
   productionBrowserSourceMaps: false,
   reactStrictMode: true,
+  skipTrailingSlashRedirect: true,
 
   images: {
     formats: ["image/avif", "image/webp"],
