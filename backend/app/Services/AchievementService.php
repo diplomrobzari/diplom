@@ -18,10 +18,12 @@ class AchievementService
             return;
         }
 
-        $participationsCount = $user->participations()->count();
-        $firstPlaces = $user->participations()->where('status', 'finished')->where('place', 1)->count();
-        $secondPlaces = $user->participations()->where('status', 'finished')->where('place', 2)->count();
-        $thirdPlaces = $user->participations()->where('status', 'finished')->where('place', 3)->count();
+        $allParticipations = fn () => $user->participations()->withTrashed();
+
+        $participationsCount = $allParticipations()->count();
+        $firstPlaces = $allParticipations()->where('status', 'finished')->where('place', 1)->count();
+        $secondPlaces = $allParticipations()->where('status', 'finished')->where('place', 2)->count();
+        $thirdPlaces = $allParticipations()->where('status', 'finished')->where('place', 3)->count();
 
         $counts = [
             'participations' => $participationsCount,

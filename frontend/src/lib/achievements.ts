@@ -23,6 +23,25 @@ export function getAchievementBarColor(code: string): string {
   }
 }
 
+export function getAchievementTotal(achievement: UserAchievement): number {
+  const threshold = achievement.achievement?.threshold ?? 0;
+  return (achievement.level ?? 0) * threshold + (achievement.progress ?? 0);
+}
+
+export function getAchievementCounterLabel(code: string, total: number): string {
+  switch (code) {
+    case "first_place":
+      return `1 место: ${total}`;
+    case "second_place":
+      return `2 место: ${total}`;
+    case "third_place":
+      return `3 место: ${total}`;
+    case "participations":
+    default:
+      return `Участий: ${total}`;
+  }
+}
+
 /** Сортировка user_achievements в нужном порядке */
 export function sortUserAchievements(
   list: (UserAchievement & { achievement?: { code?: string } })[]

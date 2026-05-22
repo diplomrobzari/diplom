@@ -9,6 +9,8 @@ import { StatusBadge } from "../../components/StatusBadge";
 import {
   sortUserAchievements,
   getAchievementBarColor,
+  getAchievementCounterLabel,
+  getAchievementTotal,
   countCompletedTasks,
 } from "../../lib/achievements";
 
@@ -702,6 +704,7 @@ export default function ProfilePage() {
                     if (!a) return null;
                     const threshold = a.threshold || 1;
                     const pct = Math.min(100, (ua.progress / threshold) * 100);
+                    const totalEarned = getAchievementTotal(ua);
                     const barColor = getAchievementBarColor(a.code ?? "");
                     return (
                       <div key={ua.id} className="rounded-xl border border-gray-100 p-4 bg-gray-50">
@@ -710,6 +713,14 @@ export default function ProfilePage() {
                           {ua.level > 0 && <span className="text-xs font-bold text-[#7D39EB] bg-[#C6FF33]/20 px-2 py-1 rounded">Г—{ua.level}</span>}
                         </div>
                         {a.description && <p className="text-xs text-gray-500 mb-2">{a.description}</p>}
+                        <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-sm">
+                          <span className="font-bold text-gray-900">
+                            {getAchievementCounterLabel(a.code ?? "", totalEarned)}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            До следующего уровня: {ua.progress ?? 0}/{threshold}
+                          </span>
+                        </div>
                         <div className="h-2 rounded-full bg-gray-200 overflow-hidden">
                           <div className={`h-full rounded-full ${barColor}`} style={{ width: `${pct}%` }} />
                         </div>

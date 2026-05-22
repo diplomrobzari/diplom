@@ -18,7 +18,7 @@ class ProfileController extends Controller
     public function show(Request $request)
     {
         $user = $request->user();
-        app(AchievementService::class)->recalculateForUser($user);
+        app(AchievementService::class)->recalculateForUser($user, true);
 
         $user->loadCount('reviewsReceived as organizer_reviews_count')
             ->loadAvg('reviewsReceived as organizer_rating_avg', 'rating');
@@ -49,7 +49,7 @@ class ProfileController extends Controller
 
     public function showUser(User $user)
     {
-        app(AchievementService::class)->recalculateForUser($user);
+        app(AchievementService::class)->recalculateForUser($user, true);
         $user->loadCount('reviewsReceived as organizer_reviews_count')
             ->loadAvg('reviewsReceived as organizer_rating_avg', 'rating');
 

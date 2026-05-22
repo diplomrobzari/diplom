@@ -16,6 +16,8 @@ import { StatusBadge } from "../../../components/StatusBadge";
 import {
   countCompletedTasks,
   getAchievementBarColor,
+  getAchievementCounterLabel,
+  getAchievementTotal,
   sortUserAchievements,
 } from "../../../lib/achievements";
 
@@ -409,7 +411,7 @@ export default function UserProfilePage() {
 
                     const threshold = base.threshold || 1;
                     const progressPercent = Math.min(100, (achievement.progress / threshold) * 100);
-                    const totalEarned = achievement.level * threshold + achievement.progress;
+                    const totalEarned = getAchievementTotal(achievement);
                     const barColor = getAchievementBarColor(base.code ?? "");
 
                     return (
@@ -423,8 +425,13 @@ export default function UserProfilePage() {
                           )}
                         </div>
                         {base.description && <p className="mb-2 text-xs text-gray-500">{base.description}</p>}
-                        <div className="mb-2 text-xs text-gray-600">
-                          {totalEarned} / {threshold}
+                        <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-sm">
+                          <span className="font-bold text-gray-900">
+                            {getAchievementCounterLabel(base.code ?? "", totalEarned)}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            До следующего уровня: {achievement.progress ?? 0}/{threshold}
+                          </span>
                         </div>
                         <div className="h-2 overflow-hidden rounded-full bg-gray-200">
                           <div className={`h-full rounded-full ${barColor}`} style={{ width: `${progressPercent}%` }} />
